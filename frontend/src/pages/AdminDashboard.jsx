@@ -116,7 +116,7 @@ function AdminDashboard() {
         }
     };
 
-    const deleteExam = async (examId, examTitle) => {
+    const deleteExam = (examId, examTitle) => {
         setDeleteTarget({ id: examId, title: examTitle });
     };
 
@@ -466,8 +466,7 @@ function AdminDashboard() {
 
             </div>
 
-        </div>
-
+            {/* Confirmation Modals — inside root div */}
             <ConfirmModal
                 isOpen={!!deleteTarget}
                 title="Delete Exam"
