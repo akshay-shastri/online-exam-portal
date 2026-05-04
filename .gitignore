@@ -19,6 +19,7 @@ backend/.mvn/wrapper/maven-wrapper.jar
 backend/*.log
 backend/logs/
 backend/.env
+backend/src/main/resources/application.properties
 
 # ========================
 # Environment Files
