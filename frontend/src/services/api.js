@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://online-exam-portal-7agm.onrender.com",
 });
 
 export default API;
