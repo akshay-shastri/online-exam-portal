@@ -1,0 +1,52 @@
+package com.examportal.backend.controller;
+
+import com.examportal.backend.entity.User;
+import com.examportal.backend.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/auth")
+@CrossOrigin("*")
+public class AuthController {
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/register")
+    public User registerUser(@RequestBody User user) {
+
+        return userService.registerUser(user);
+    }
+
+    @PostMapping("/login")
+    public Map<String, Object> loginUser(
+            @RequestBody Map<String, String> loginData
+    ) {
+
+        String email = loginData.get("email");
+        String password = loginData.get("password");
+
+        return userService.loginUser(email, password);
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(
+            @RequestBody Map<String, String> request
+    ) {
+
+        String email = request.get("email");
+        String currentPassword =
+                request.get("currentPassword");
+        String newPassword =
+                request.get("newPassword");
+
+        return userService.changePassword(
+                email,
+                currentPassword,
+                newPassword
+        );
+    }
+}
