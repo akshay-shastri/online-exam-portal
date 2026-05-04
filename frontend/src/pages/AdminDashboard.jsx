@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
+import useTheme from "../hooks/useTheme";
 
 function AdminDashboard() {
 
@@ -149,13 +150,14 @@ function AdminDashboard() {
     };
 
     const inputClass = "w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-all duration-200 hover:border-blue-300";
+    const { dark, toggle: toggleTheme } = useTheme();
 
     return (
 
-        <div className="min-h-screen bg-[#f0f4ff]" onClick={() => showDropdown && setShowDropdown(false)}>
+        <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-gray-950" : "bg-[#f0f4ff]"}`} onClick={() => showDropdown && setShowDropdown(false)}>
 
             {/* Navbar */}
-            <nav className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm">
+            <nav className={`backdrop-blur-md border-b sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm transition-colors duration-300 ${dark ? "bg-gray-900/90 border-gray-700" : "bg-white/80 border-blue-100"}`}>
 
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
@@ -173,6 +175,24 @@ function AdminDashboard() {
                 </div>
 
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
+
+                    {/* Theme toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 mr-2 ${dark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
+                        title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    >
+                        {dark ? (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.166 17.834a.75.75 0 00-1.06 1.06l1.59 1.591a.75.75 0 001.061-1.06l-1.59-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.166 6.166a.75.75 0 001.06 1.06l1.59-1.59a.75.75 0 00-1.06-1.061l-1.59 1.59z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                    </button>
+
                     <button
                         onClick={() => setShowDropdown(!showDropdown)}
                         className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-lg font-bold shadow-md hover:shadow-blue-300 hover:scale-105 transition-all duration-200 ring-2 ring-white"
@@ -181,15 +201,15 @@ function AdminDashboard() {
                     </button>
 
                     {showDropdown && (
-                        <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                        <div className={`absolute right-0 mt-3 w-60 rounded-2xl shadow-2xl border overflow-hidden ${dark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
 
-                            <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-blue-100">
+                            <div className={`px-5 py-4 border-b ${dark ? "bg-gray-800 border-gray-700" : "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100"}`}>
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-base shadow">
                                         {firstLetter}
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-gray-800 text-sm leading-tight">{name}</p>
+                                        <p className={`font-semibold text-sm leading-tight ${dark ? "text-white" : "text-gray-800"}`}>{name}</p>
                                         <p className="text-xs text-blue-500 font-medium mt-0.5">Administrator</p>
                                     </div>
                                 </div>

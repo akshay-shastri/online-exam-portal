@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
+import useTheme from "../hooks/useTheme";
 
 function StudentDashboard() {
 
@@ -27,6 +28,7 @@ function StudentDashboard() {
     const name = localStorage.getItem("name");
     const email = localStorage.getItem("email");
     const firstLetter = name ? name.charAt(0).toUpperCase() : "U";
+    const { dark, toggle: toggleTheme } = useTheme();
 
     useEffect(() => {
         fetchExams();
@@ -138,10 +140,10 @@ function StudentDashboard() {
 
     return (
 
-        <div className="min-h-screen bg-[#f0f4ff]" onClick={() => showDropdown && setShowDropdown(false)}>
+        <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-gray-950" : "bg-[#f0f4ff]"}`} onClick={() => showDropdown && setShowDropdown(false)}>
 
             {/* Navbar */}
-            <nav className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm">
+            <nav className={`backdrop-blur-md border-b sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm transition-colors duration-300 ${dark ? "bg-gray-900/90 border-gray-700" : "bg-white/80 border-blue-100"}`}>
 
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
@@ -156,6 +158,23 @@ function StudentDashboard() {
 
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
 
+                    {/* Theme toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 mr-2 ${dark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
+                        title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    >
+                        {dark ? (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.166 17.834a.75.75 0 00-1.06 1.06l1.59 1.591a.75.75 0 001.061-1.06l-1.59-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.166 6.166a.75.75 0 001.06 1.06l1.59-1.59a.75.75 0 00-1.06-1.061l-1.59 1.59z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                    </button>
+
                     <button
                         onClick={() => setShowDropdown(!showDropdown)}
                         className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow-md hover:shadow-blue-300 hover:scale-105 transition-all duration-200 ring-2 ring-white"
@@ -165,15 +184,15 @@ function StudentDashboard() {
 
                     {showDropdown && (
 
-                        <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in">
+                        <div className={`absolute right-0 mt-3 w-60 rounded-2xl shadow-2xl border overflow-hidden animate-fade-in ${dark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}>
 
-                            <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-blue-100">
+                            <div className={`px-5 py-4 border-b ${dark ? "bg-gray-800 border-gray-700" : "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100"}`}>
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow">
                                         {firstLetter}
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-gray-800 text-sm leading-tight">{name}</p>
+                                        <p className={`font-semibold text-sm leading-tight ${dark ? "text-white" : "text-gray-800"}`}>{name}</p>
                                         <p className="text-xs text-blue-500 font-medium mt-0.5">Student</p>
                                     </div>
                                 </div>
@@ -182,7 +201,7 @@ function StudentDashboard() {
                             <div className="py-1.5">
                                 <button
                                     onClick={() => navigate("/history")}
-                                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                                    className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${dark ? "text-gray-300 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-50"}`}
                                 >
                                     <span className="text-base">📋</span>
                                     <span className="font-medium">Exam History</span>
@@ -190,7 +209,7 @@ function StudentDashboard() {
 
                                 <button
                                     onClick={openModal}
-                                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                                    className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${dark ? "text-gray-300 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-50"}`}
                                 >
                                     <span className="text-base">⚙️</span>
                                     <span className="font-medium">Settings</span>
@@ -402,8 +421,8 @@ function StudentDashboard() {
                 {/* Section Header */}
                 <div className="flex items-center justify-between mb-7">
                     <div>
-                        <h3 className="text-2xl font-bold text-gray-800 tracking-tight">Available Exams</h3>
-                        <p className="text-sm text-gray-500 mt-1">{exams.length} exam{exams.length !== 1 ? "s" : ""} available for you</p>
+                        <h3 className={`text-2xl font-bold tracking-tight ${dark ? "text-white" : "text-gray-800"}`}>Available Exams</h3>
+                        <p className={`text-sm mt-1 ${dark ? "text-gray-400" : "text-gray-500"}`}>{exams.length} exam{exams.length !== 1 ? "s" : ""} available for you</p>
                     </div>
                     <span className="bg-blue-100 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full">
                         {exams.length} Total
@@ -446,7 +465,7 @@ function StudentDashboard() {
 
                         <div
                             key={exam.id}
-                            className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col"
+                            className={`group rounded-2xl shadow-sm hover:shadow-xl border hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col ${dark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}
                         >
                             <div className={`h-1.5 w-full ${index % 3 === 0 ? "bg-gradient-to-r from-blue-400 to-blue-600" : index % 3 === 1 ? "bg-gradient-to-r from-indigo-400 to-purple-500" : "bg-gradient-to-r from-cyan-400 to-blue-500"}`} />
 
@@ -466,11 +485,11 @@ function StudentDashboard() {
                                     </span>
                                 </div>
 
-                                <h2 className="text-lg font-bold text-gray-800 mb-2 leading-snug group-hover:text-blue-600 transition-colors">
+                                <h2 className={`text-lg font-bold mb-2 leading-snug group-hover:text-blue-600 transition-colors ${dark ? "text-gray-100" : "text-gray-800"}`}>
                                     {exam.title}
                                 </h2>
 
-                                <p className="text-sm text-gray-500 mb-6 leading-relaxed flex-1">
+                                <p className={`text-sm mb-6 leading-relaxed flex-1 ${dark ? "text-gray-400" : "text-gray-500"}`}>
                                     Test your skills and improve your performance with this examination.
                                 </p>
 

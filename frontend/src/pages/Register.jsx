@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 
 function Register() {
+
+    const navigate = useNavigate();
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -26,9 +28,11 @@ function Register() {
                 role: "STUDENT"
             });
 
-            toast.success("Registration successful! You can now sign in.");
+            toast.success("Account created successfully! Please sign in.");
 
             console.log(response.data);
+
+            setTimeout(() => navigate("/login"), 1500);
 
         } catch (error) {
 
