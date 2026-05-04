@@ -9,8 +9,11 @@ import ExamPage from "./pages/ExamPage";
 import ResultPage from "./pages/ResultPage";
 import HistoryPage from "./pages/HistoryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import useTheme from "./hooks/useTheme";
 
 function App() {
+  // Ensure theme class is initialized globally so Tailwind `dark:` variants work across pages
+  useTheme();
 
   return (
 

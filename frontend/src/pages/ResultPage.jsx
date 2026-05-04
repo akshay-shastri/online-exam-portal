@@ -84,7 +84,7 @@ function ResultPage() {
 
     return (
 
-        <div className={`min-h-screen px-4 py-10 relative overflow-hidden ${passed ? "bg-[#f0f7ff]" : "bg-[#fff4f4]"}`}>
+        <div className={`min-h-screen px-4 py-10 relative overflow-hidden ${passed ? "bg-[#f0f7ff]" : "bg-[#fff4f4]"} dark:bg-gray-950` }>
 
             {/* Background blobs */}
             <div className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2 pointer-events-none ${passed ? "bg-blue-300" : "bg-red-200"}`} />
@@ -106,19 +106,19 @@ function ResultPage() {
             <div className="relative z-10 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
                 {/* ── LEFT: Result Card ── */}
-                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
 
                     <div className={`h-2 w-full ${passed ? "bg-gradient-to-r from-blue-500 to-indigo-600" : "bg-gradient-to-r from-red-400 to-rose-500"}`} />
 
-                    <div className={`px-8 pt-8 pb-6 text-center ${passed ? "bg-gradient-to-b from-blue-50 to-white" : "bg-gradient-to-b from-red-50 to-white"}`}>
+                    <div className={`px-8 pt-8 pb-6 text-center ${passed ? "bg-gradient-to-b from-blue-50 to-white" : "bg-gradient-to-b from-red-50 to-white"} dark:bg-gray-800` }>
                         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 ${passed ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-500"}`}>
                             <span>{passed ? "✦" : "✕"}</span>
                             Exam Result
                         </div>
-                        <h1 className="text-2xl font-extrabold text-gray-800 leading-tight">
+                        <h1 className="text-2xl font-extrabold text-gray-800 dark:text-gray-100 leading-tight">
                             {passed ? "Congratulations!" : "Better Luck Next Time"}
                         </h1>
-                        <p className="text-sm text-gray-400 mt-1.5">
+                        <p className="text-sm text-gray-400 mt-1.5 dark:text-gray-300">
                             {passed ? "You have successfully passed the exam." : "You did not meet the passing criteria."}
                         </p>
                     </div>
@@ -160,17 +160,17 @@ function ResultPage() {
 
                         {/* Mini stats */}
                         <div className="w-full grid grid-cols-3 gap-3 mb-6">
-                            <div className="bg-gray-50 rounded-2xl px-3 py-4 text-center border border-gray-100">
-                                <p className="text-2xl font-extrabold text-gray-800">{score}</p>
-                                <p className="text-xs text-gray-400 font-medium mt-0.5">Correct</p>
+                            <div className="bg-gray-50 rounded-2xl px-3 py-4 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
+                                <p className="text-2xl font-extrabold text-gray-800 dark:text-gray-100">{score}</p>
+                                <p className="text-xs text-gray-400 font-medium mt-0.5 dark:text-gray-300">Correct</p>
                             </div>
-                            <div className="bg-gray-50 rounded-2xl px-3 py-4 text-center border border-gray-100">
-                                <p className="text-2xl font-extrabold text-gray-800">{wrong}</p>
-                                <p className="text-xs text-gray-400 font-medium mt-0.5">Wrong</p>
+                            <div className="bg-gray-50 rounded-2xl px-3 py-4 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
+                                <p className="text-2xl font-extrabold text-gray-800 dark:text-gray-100">{wrong}</p>
+                                <p className="text-xs text-gray-400 font-medium mt-0.5 dark:text-gray-300">Wrong</p>
                             </div>
-                            <div className="bg-gray-50 rounded-2xl px-3 py-4 text-center border border-gray-100">
-                                <p className="text-2xl font-extrabold text-gray-800">{totalQuestions}</p>
-                                <p className="text-xs text-gray-400 font-medium mt-0.5">Total</p>
+                            <div className="bg-gray-50 rounded-2xl px-3 py-4 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
+                                <p className="text-2xl font-extrabold text-gray-800 dark:text-gray-100">{totalQuestions}</p>
+                                <p className="text-xs text-gray-400 font-medium mt-0.5 dark:text-gray-300">Total</p>
                             </div>
                         </div>
 

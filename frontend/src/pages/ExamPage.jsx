@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+        <div className="min-h-screen bg-[#f0f4ff] dark:bg-gray-950">
 import API from "../services/api";
 import toast from "react-hot-toast";
+            <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-blue-100 shadow-sm dark:bg-gray-900/90 dark:border-gray-700">
 import ConfirmModal from "../components/ConfirmModal";
 
 function ExamPage() {
@@ -39,7 +41,7 @@ function ExamPage() {
 
             return;
         }
-
+                        <p className="text-sm text-gray-400 font-medium dark:text-gray-300">Loading questions...</p>
         const timer = setInterval(() => {
 
             setTimeLeft((prevTime) => prevTime - 1);
@@ -51,8 +53,8 @@ function ExamPage() {
     }, [timeLeft, submitted]);
 
     const fetchQuestions = async () => {
-
-        setQuestionsLoading(true);
+                        <p className="text-gray-600 font-semibold text-base dark:text-gray-100">Failed to load questions</p>
+                        <p className="text-gray-400 text-sm mt-1 mb-5 dark:text-gray-300">Something went wrong. Please go back and try again.</p>
         setQuestionsError(false);
 
         try {
@@ -64,8 +66,8 @@ function ExamPage() {
         } catch (error) {
 
             console.log(error);
-            setQuestionsError(true);
-            toast.error("Failed to load questions. Please go back and try again.");
+                        <p className="text-gray-500 font-semibold text-base dark:text-gray-100">No questions found</p>
+                        <p className="text-gray-400 text-sm mt-1 mb-5 dark:text-gray-300">This exam has no questions yet. Please check back later.</p>
         } finally {
 
             setQuestionsLoading(false);
@@ -126,7 +128,7 @@ function ExamPage() {
         } catch (error) {
             console.log("Failed to save result:", error);
         }
-
+                                    <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 leading-relaxed pt-1.5">
         navigate("/result", {
             state: {
                 score: correctAnswers,

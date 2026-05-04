@@ -78,7 +78,7 @@ function Login() {
 
     return (
 
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-12 relative overflow-hidden dark:bg-gray-950">
 
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-100 rounded-full opacity-40 -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-100 rounded-full opacity-40 translate-x-1/2 translate-y-1/2 blur-3xl pointer-events-none" />
@@ -94,10 +94,10 @@ function Login() {
                     <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
                         Smart Exam Portal
                     </h1>
-                    <p className="text-sm text-gray-400 mt-1.5 font-medium">Sign in to your account</p>
+                    <p className="text-sm text-gray-400 mt-1.5 font-medium dark:text-gray-300">Sign in to your account</p>
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white px-8 py-8">
+                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white px-8 py-8 dark:bg-gray-800 dark:border-gray-700">
 
                     <div className="space-y-5">
 
@@ -114,7 +114,7 @@ function Login() {
                                 <input
                                     type="email"
                                     placeholder="you@example.com"
-                                    className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-all duration-200 hover:border-blue-300 disabled:opacity-60"
+                                    className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-all duration-200 hover:border-blue-300 disabled:opacity-60 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
                                 />
@@ -134,7 +134,7 @@ function Login() {
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter your password"
-                                    className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-all duration-200 hover:border-blue-300 disabled:opacity-60"
+                                    className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-all duration-200 hover:border-blue-300 disabled:opacity-60 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
                                 />

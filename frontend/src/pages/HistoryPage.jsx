@@ -13,8 +13,10 @@ function HistoryPage() {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+        <div className="min-h-screen bg-[#f0f4ff] dark:bg-gray-950" onClick={() => showDropdown && setShowDropdown(false)}>
     const [showDropdown, setShowDropdown] = useState(false);
 
+            <nav className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm dark:bg-gray-900/90 dark:border-gray-700">
     useEffect(() => {
         fetchHistory();
     }, []);
@@ -42,7 +44,7 @@ function HistoryPage() {
 
     const formatDate = (dateStr) => {
         if (!dateStr) return "—";
-        const d = new Date(dateStr);
+                                        <p className="font-semibold text-gray-800 text-sm leading-tight dark:text-gray-100">{name}</p>
         return d.toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
@@ -96,7 +98,7 @@ function HistoryPage() {
 
                             <div className="py-1.5">
                                 <button
-                                    onClick={() => navigate("/student-dashboard")}
+                        <div className="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl px-6 py-4 text-center border border-white/20 dark:bg-gray-800 dark:border-gray-700">
                                     className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
                                 >
                                     <span className="text-base">🏠</span>
