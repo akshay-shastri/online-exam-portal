@@ -174,12 +174,12 @@ function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
 
                     {/* Theme toggle */}
                     <button
                         onClick={toggleTheme}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 mr-2 ${dark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 ${dark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
                         title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                     >
                         {dark ? (
@@ -195,7 +195,7 @@ function AdminDashboard() {
 
                     <button
                         onClick={() => setShowDropdown(!showDropdown)}
-                        className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-lg font-bold shadow-md hover:shadow-blue-300 hover:scale-105 transition-all duration-200 ring-2 ring-white"
+                        className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-lg font-bold shadow-md hover:shadow-blue-300 hover:scale-105 transition-all duration-200 ring-2 ring-white shrink-0"
                     >
                         {firstLetter}
                     </button>
