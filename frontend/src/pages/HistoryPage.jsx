@@ -13,10 +13,8 @@ function HistoryPage() {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-        <div className="min-h-screen bg-[#f0f4ff] dark:bg-gray-950" onClick={() => showDropdown && setShowDropdown(false)}>
     const [showDropdown, setShowDropdown] = useState(false);
 
-            <nav className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm dark:bg-gray-900/90 dark:border-gray-700">
     useEffect(() => {
         fetchHistory();
     }, []);
@@ -44,7 +42,7 @@ function HistoryPage() {
 
     const formatDate = (dateStr) => {
         if (!dateStr) return "—";
-                                        <p className="font-semibold text-gray-800 text-sm leading-tight dark:text-gray-100">{name}</p>
+        const d = new Date(dateStr);
         return d.toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
@@ -56,10 +54,10 @@ function HistoryPage() {
 
     return (
 
-        <div className="min-h-screen bg-[#f0f4ff]" onClick={() => showDropdown && setShowDropdown(false)}>
+        <div className="min-h-screen bg-[#f0f4ff] dark:bg-gray-950" onClick={() => showDropdown && setShowDropdown(false)}>
 
             {/* Navbar */}
-            <nav className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm">
+            <nav className="bg-white/80 backdrop-blur-md border-b border-blue-100 sticky top-0 z-50 px-6 md:px-12 py-4 flex justify-between items-center shadow-sm dark:bg-gray-900/90 dark:border-gray-700">
 
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
@@ -82,15 +80,15 @@ function HistoryPage() {
                     </button>
 
                     {showDropdown && (
-                        <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                        <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
 
-                            <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-blue-100">
+                            <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-blue-100 dark:bg-gray-800 dark:border-gray-700">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow">
                                         {firstLetter}
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-gray-800 text-sm leading-tight">{name}</p>
+                                        <p className="font-semibold text-gray-800 text-sm leading-tight dark:text-gray-100">{name}</p>
                                         <p className="text-xs text-blue-500 font-medium mt-0.5">Student</p>
                                     </div>
                                 </div>
@@ -98,8 +96,8 @@ function HistoryPage() {
 
                             <div className="py-1.5">
                                 <button
-                        <div className="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl px-6 py-4 text-center border border-white/20 dark:bg-gray-800 dark:border-gray-700">
-                                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                                    onClick={() => navigate("/student-dashboard")}
+                                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
                                     <span className="text-base">🏠</span>
                                     <span className="font-medium">Dashboard</span>
@@ -107,7 +105,7 @@ function HistoryPage() {
 
                                 <button
                                     onClick={() => navigate("/history")}
-                                    className="w-full text-left px-5 py-3 text-sm text-blue-600 bg-blue-50 flex items-center gap-3"
+                                    className="w-full text-left px-5 py-3 text-sm text-blue-600 bg-blue-50 flex items-center gap-3 dark:bg-blue-900/20"
                                 >
                                     <span className="text-base">📋</span>
                                     <span className="font-medium">Exam History</span>
@@ -145,7 +143,7 @@ function HistoryPage() {
                                 All your past exam attempts and results.
                             </p>
                         </div>
-                        <div className="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl px-6 py-4 text-center border border-white/20">
+                        <div className="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl px-6 py-4 text-center border border-white/20 dark:bg-gray-800 dark:border-gray-700">
                             <p className="text-3xl font-extrabold text-white">{results.length}</p>
                             <p className="text-blue-100 text-xs font-medium mt-0.5">Exams Taken</p>
                         </div>
@@ -167,20 +165,20 @@ function HistoryPage() {
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-24">
                         <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin mb-4" />
-                        <p className="text-sm text-gray-400 font-medium">Loading your history...</p>
+                        <p className="text-sm text-gray-400 font-medium dark:text-gray-300">Loading your history...</p>
                     </div>
                 )}
 
                 {/* Error state */}
                 {!loading && error && (
-                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-red-200 shadow-sm">
+                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-red-200 shadow-sm dark:bg-gray-800 dark:border-red-700">
                         <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                             <svg className="w-8 h-8 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                         </div>
-                        <p className="text-gray-600 font-semibold text-base">Failed to load history</p>
-                        <p className="text-gray-400 text-sm mt-1 mb-5">Something went wrong while fetching your results.</p>
+                        <p className="text-gray-600 font-semibold text-base dark:text-gray-100">Failed to load history</p>
+                        <p className="text-gray-400 text-sm mt-1 mb-5 dark:text-gray-300">Something went wrong while fetching your results.</p>
                         <button
                             onClick={fetchHistory}
                             className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-blue-200 hover:shadow-md"
@@ -192,14 +190,14 @@ function HistoryPage() {
 
                 {/* Empty state */}
                 {!loading && !error && results.length === 0 && (
-                    <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-blue-200 shadow-sm">
+                    <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-blue-200 shadow-sm dark:bg-gray-800 dark:border-blue-700">
                         <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                             <svg className="w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
                         </div>
-                        <p className="text-gray-500 font-semibold text-base">No exam history yet</p>
-                        <p className="text-gray-400 text-sm mt-1 mb-6">Complete an exam to see your results here.</p>
+                        <p className="text-gray-500 font-semibold text-base dark:text-gray-100">No exam history yet</p>
+                        <p className="text-gray-400 text-sm mt-1 mb-6 dark:text-gray-300">Complete an exam to see your results here.</p>
                         <button
                             onClick={() => navigate("/student-dashboard")}
                             className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-blue-200 hover:shadow-md"
@@ -219,7 +217,7 @@ function HistoryPage() {
                             return (
                                 <div
                                     key={result.id}
-                                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
+                                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col dark:bg-gray-800 dark:border-gray-700"
                                 >
                                     {/* Top accent */}
                                     <div className={`h-1.5 w-full ${passed ? "bg-gradient-to-r from-blue-400 to-indigo-500" : "bg-gradient-to-r from-red-400 to-rose-500"}`} />
@@ -234,7 +232,7 @@ function HistoryPage() {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                     </svg>
                                                 </div>
-                                                <h3 className="text-sm font-bold text-gray-800 leading-snug">{result.examTitle}</h3>
+                                                <h3 className="text-sm font-bold text-gray-800 leading-snug dark:text-gray-100">{result.examTitle}</h3>
                                             </div>
                                             <span className={`shrink-0 text-xs font-bold px-3 py-1 rounded-full ${passed ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-red-50 text-red-500 border border-red-100"}`}>
                                                 {passed ? "PASSED" : "FAILED"}
@@ -243,23 +241,23 @@ function HistoryPage() {
 
                                         {/* Stats grid */}
                                         <div className="grid grid-cols-3 gap-2 mb-4">
-                                            <div className="bg-gray-50 rounded-xl px-2 py-3 text-center border border-gray-100">
-                                                <p className="text-lg font-extrabold text-gray-800">{result.score}</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wide">Score</p>
+                                            <div className="bg-gray-50 rounded-xl px-2 py-3 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
+                                                <p className="text-lg font-extrabold text-gray-800 dark:text-gray-100">{result.score}</p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Score</p>
                                             </div>
-                                            <div className="bg-gray-50 rounded-xl px-2 py-3 text-center border border-gray-100">
-                                                <p className="text-lg font-extrabold text-gray-800">{result.totalQuestions}</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wide">Total</p>
+                                            <div className="bg-gray-50 rounded-xl px-2 py-3 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
+                                                <p className="text-lg font-extrabold text-gray-800 dark:text-gray-100">{result.totalQuestions}</p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Total</p>
                                             </div>
-                                            <div className={`rounded-xl px-2 py-3 text-center border ${passed ? "bg-blue-50 border-blue-100" : "bg-red-50 border-red-100"}`}>
+                                            <div className={`rounded-xl px-2 py-3 text-center border ${passed ? "bg-blue-50 border-blue-100" : "bg-red-50 border-red-100"} dark:bg-gray-700 dark:border-gray-700`}>
                                                 <p className={`text-lg font-extrabold ${passed ? "text-blue-600" : "text-red-500"}`}>{result.percentage}%</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-wide">Accuracy</p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Accuracy</p>
                                             </div>
                                         </div>
 
                                         {/* Percentage bar */}
                                         <div className="mb-4">
-                                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden dark:bg-gray-700">
                                                 <div
                                                     className={`h-1.5 rounded-full transition-all duration-700 ${passed ? "bg-gradient-to-r from-blue-400 to-indigo-500" : "bg-gradient-to-r from-red-400 to-rose-500"}`}
                                                     style={{ width: `${result.percentage}%` }}
@@ -268,7 +266,7 @@ function HistoryPage() {
                                         </div>
 
                                         {/* Date */}
-                                        <div className="mt-auto flex items-center gap-1.5 text-xs text-gray-400">
+                                        <div className="mt-auto flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-300">
                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
