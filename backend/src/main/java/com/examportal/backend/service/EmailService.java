@@ -108,4 +108,41 @@ public void sendReminderEmail(
     mailSender.send(message);
 }
 
+
+public void sendExamCreatedEmail(
+        String toEmail,
+        String studentName,
+        String examTitle,
+        String examTime
+) {
+
+    SimpleMailMessage message =
+            new SimpleMailMessage();
+
+    message.setTo(toEmail);
+
+    message.setSubject(
+            "Exam Scheduled Successfully"
+    );
+
+    message.setText(
+
+            "Hello " + studentName + ",\n\n"
+
+            + "A new exam has been scheduled for you.\n\n"
+
+            + "Exam: " + examTitle + "\n"
+
+            + "Start Time: " + examTime + "\n\n"
+
+            + "Please login to the Smart Exam Portal before the exam starts.\n\n"
+
+            + "Best of luck!\n"
+
+            + "Smart Exam Portal"
+    );
+
+    mailSender.send(message);
+}
+
 }
