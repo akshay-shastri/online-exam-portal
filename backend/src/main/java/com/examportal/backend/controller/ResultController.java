@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
-@CrossOrigin("*")
+@CrossOrigin(origins = "http://localhost:5173")
+// @CrossOrigin("*")
 @RestController
 @RequestMapping("/results")
 public class ResultController {
