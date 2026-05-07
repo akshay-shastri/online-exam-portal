@@ -93,7 +93,11 @@ public class ReminderScheduler {
                         user.getName(),
                         exam.getTitle(),
                         exam.getStartTime()
-                                .toString()
+    .format(
+        java.time.format.DateTimeFormatter.ofPattern(
+            "dd MMM yyyy hh:mm a"
+        )
+    )
                 );
 
         Notification notification =
