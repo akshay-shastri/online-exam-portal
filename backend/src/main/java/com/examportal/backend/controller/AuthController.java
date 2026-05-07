@@ -49,4 +49,28 @@ public class AuthController {
                 newPassword
         );
     }
+
+    @PostMapping("/verify-otp")
+    public String verifyOtp(
+        @RequestBody Map<String, String> request
+) {
+
+    return userService.verifyOtp(
+            request.get("email"),
+            request.get("otp")
+    );
+}
+
+
+@PostMapping("/resend-otp")
+public String resendOtp(
+        @RequestBody Map<String, String> request
+) {
+
+    return userService.resendOtp(
+            request.get("email")
+    );
+}
+
+
 }

@@ -3,6 +3,8 @@ package com.examportal.backend.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+
+
 @Entity
 @Table(name = "results")
 public class Result {
@@ -15,11 +17,21 @@ public class Result {
 
     private String examTitle;
 
-    private int score;
+    private double score;
 
     private int totalQuestions;
 
     private double percentage;
+
+    private String email;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String startFaceImage;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String endFaceImage;
 
     private LocalDateTime submittedAt;
 
@@ -50,11 +62,11 @@ public class Result {
         this.examTitle = examTitle;
     }
 
-    public int getScore() {
+    public double getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(double score) {
         this.score = score;
     }
 
@@ -74,11 +86,35 @@ public class Result {
         this.percentage = percentage;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public LocalDateTime getSubmittedAt() {
         return submittedAt;
     }
 
     public void setSubmittedAt(LocalDateTime submittedAt) {
         this.submittedAt = submittedAt;
+    }
+
+    public String getStartFaceImage() {
+    return startFaceImage;
+}
+
+    public void setStartFaceImage(String startFaceImage) {
+        this.startFaceImage = startFaceImage;
+    }
+
+    public String getEndFaceImage() {
+    return endFaceImage;
+}
+
+    public void setEndFaceImage(String endFaceImage) {
+        this.endFaceImage = endFaceImage;
     }
 }

@@ -2,8 +2,20 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 import ConfirmModal from "../components/ConfirmModal";
 import useTheme from "../hooks/useTheme";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell
+} from "recharts";
 
 function AdminDashboard() {
 
@@ -16,6 +28,10 @@ function AdminDashboard() {
     const [title, setTitle] = useState("");
     const [duration, setDuration] = useState("");
 
+    const [positiveMarks, setPositiveMarks] = useState("");
+
+    const [negativeMarks, setNegativeMarks] = useState("");
+
     const [exams, setExams] = useState([]);
 
     const [selectedExamId, setSelectedExamId] = useState("");
@@ -27,18 +43,55 @@ function AdminDashboard() {
     const [optionD, setOptionD] = useState("");
     const [correctAnswer, setCorrectAnswer] = useState("");
 
+    const [examQuestions, setExamQuestions] = useState([]);
+
+    const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+    const [editingQuestion, setEditingQuestion] = useState(null);
+
+    const [editQuestionText, setEditQuestionText] = useState("");
+
+    const [editOptionA, setEditOptionA] = useState("");
+
+    const [editOptionB, setEditOptionB] = useState("");
+
+    const [editOptionC, setEditOptionC] = useState("");
+
+    const [editOptionD, setEditOptionD] = useState("");
+
+    const [editCorrectAnswer, setEditCorrectAnswer] = useState("");
+
+    const [startTime, setStartTime] = useState("");
+
+    const [endTime, setEndTime] = useState("");
+
+    const [violations, setViolations] = useState([]);
+
+    const [results,setResults] = useState([]);
+
     const [showDropdown, setShowDropdown] = useState(false);
     const [loadingExam, setLoadingExam] = useState(false);
     const [loadingQuestion, setLoadingQuestion] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [analytics, setAnalytics] = useState(null);
 
     useEffect(() => {
 
-        fetchExams();
+    fetchExams();
 
-    }, []);
+    fetchAnalytics();
+
+    fetchViolations();
+
+    fetchResults();
+
+    
+
+}, []);
+
+
 
     const fetchExams = async () => {
 
@@ -54,6 +107,58 @@ function AdminDashboard() {
         }
     };
 
+    const fetchAnalytics = async () => {
+
+    try {
+
+        const response =
+            await API.get("/results/analytics");
+
+        setAnalytics(response.data);
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
+
+const fetchViolations = async () => {
+
+    try {
+
+        const response =
+            await API.get("/violations");
+
+        setViolations(response.data);
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
+
+const fetchResults =
+    async () => {
+
+    try {
+
+        const response =
+            await API.get(
+                "/results"
+            );
+
+        setResults(
+            response.data
+        );
+
+        console.log(response.data);
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
+
     const createExam = async () => {
 
         if (loadingExam) return;
@@ -62,16 +167,51 @@ function AdminDashboard() {
 
         try {
 
-            const response = await API.post("/exams", {
-                title,
-                duration
-            });
+            const response = await API.post(
+    "/exams",
+    {
+        title,
+
+        duration:
+            parseInt(duration),
+
+        positiveMarks:
+            positiveMarks
+                ? parseFloat(
+                    positiveMarks
+                )
+                : 1,
+
+        negativeMarks:
+            negativeMarks
+                ? parseFloat(
+                    negativeMarks
+                )
+                : 0,
+
+        startTime:
+            startTime
+                ? `${startTime}:00`
+                : null,
+
+        endTime:
+            endTime
+                ? `${endTime}:00`
+                : null,
+
+        active: true
+    }
+);
 
             toast.success("Exam created successfully!");
 
             console.log(response.data);
 
             fetchExams();
+            setTitle("");
+            setDuration("");
+            setPositiveMarks("");
+            setNegativeMarks("");
 
         } catch (error) {
 
@@ -116,6 +256,200 @@ function AdminDashboard() {
             setLoadingQuestion(false);
         }
     };
+
+    const handleBulkUpload = async (e) => {
+
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    if (!selectedExamId) {
+
+        toast.error(
+            "Please select an exam first."
+        );
+
+        return;
+    }
+
+    try {
+
+        const data =
+            await file.arrayBuffer();
+
+        const workbook =
+            XLSX.read(data);
+
+        const sheet =
+            workbook.Sheets[
+                workbook.SheetNames[0]
+            ];
+
+        const jsonData =
+            XLSX.utils.sheet_to_json(sheet);
+
+        if (jsonData.length === 0) {
+
+            toast.error(
+                "Excel file is empty."
+            );
+
+            return;
+        }
+
+        for (const row of jsonData) {
+
+            await API.post(
+                "/questions",
+                {
+                    questionText:
+                        row.Question,
+
+                    optionA:
+                        row.OptionA,
+
+                    optionB:
+                        row.OptionB,
+
+                    optionC:
+                        row.OptionC,
+
+                    optionD:
+                        row.OptionD,
+
+                    correctAnswer:
+                        row.CorrectAnswer,
+
+                    exam: {
+                        id: selectedExamId
+                    }
+                }
+            );
+        }
+
+        toast.success(
+            `${jsonData.length} questions uploaded successfully!`
+        );
+
+        fetchQuestions(
+            selectedExamId
+        );
+
+    } catch (error) {
+
+        console.log(error);
+
+        toast.error(
+            "Bulk upload failed."
+        );
+    }
+};
+
+    const fetchQuestions = async (examId) => {
+
+    if (!examId) return;
+
+    setLoadingQuestions(true);
+
+    try {
+
+        const response =
+            await API.get(`/questions/${examId}`);
+
+        setExamQuestions(response.data);
+
+    } catch (error) {
+
+        console.log(error);
+
+        toast.error(
+            "Failed to load questions."
+        );
+
+    } finally {
+
+        setLoadingQuestions(false);
+    }
+};
+
+const deleteQuestion = async (id) => {
+
+    try {
+
+        await API.delete(`/questions/${id}`);
+
+        toast.success(
+            "Question deleted successfully!"
+        );
+
+        fetchQuestions(selectedExamId);
+
+    } catch (error) {
+
+        console.log(error);
+
+        toast.error(
+            "Failed to delete question."
+        );
+    }
+};
+
+const openEditModal = (question) => {
+
+    setEditingQuestion(question);
+
+    setEditQuestionText(
+        question.questionText
+    );
+
+    setEditOptionA(question.optionA);
+
+    setEditOptionB(question.optionB);
+
+    setEditOptionC(question.optionC);
+
+    setEditOptionD(question.optionD);
+
+    setEditCorrectAnswer(
+        question.correctAnswer
+    );
+};
+
+const updateQuestion = async () => {
+
+    try {
+
+        await API.put(
+            `/questions/${editingQuestion.id}`,
+            {
+                questionText: editQuestionText,
+                optionA: editOptionA,
+                optionB: editOptionB,
+                optionC: editOptionC,
+                optionD: editOptionD,
+                correctAnswer: editCorrectAnswer
+            }
+        );
+
+        toast.success(
+            "Question updated successfully!"
+        );
+
+        setEditingQuestion(null);
+
+        fetchQuestions(selectedExamId);
+
+    } catch (error) {
+
+        console.log(error);
+
+        toast.error(
+            "Failed to update question."
+        );
+    }
+};
+
+
 
     const deleteExam = (examId, examTitle) => {
         setDeleteTarget({ id: examId, title: examTitle });
@@ -231,7 +565,7 @@ function AdminDashboard() {
 
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-7xl mx-auto">
+            <div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
 
                 {/* Hero Banner */}
                 <div className="mb-10 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 rounded-3xl px-8 py-9 md:px-12 shadow-xl shadow-blue-200 relative overflow-hidden">
@@ -253,6 +587,137 @@ function AdminDashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* Analytics Section */}
+
+{analytics && (
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+
+    {[
+        {
+            title: "Total Students",
+            value: analytics.totalStudents
+        },
+        {
+            title: "Total Attempts",
+            value: analytics.totalAttempts
+        },
+        {
+            title: "Average Score",
+            value: `${analytics.averageScore}%`
+        },
+        {
+            title: "Pass Percentage",
+            value: `${analytics.passPercentage}%`
+        }
+    ].map((item, index) => (
+
+        <div
+            key={index}
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+        >
+
+            <p className="text-sm text-gray-400 font-medium">
+                {item.title}
+            </p>
+
+            <h3 className="text-3xl font-extrabold text-gray-800 mt-2">
+                {item.value}
+            </h3>
+
+        </div>
+    ))}
+
+</div>
+
+)}
+
+{/* Charts */}
+
+{analytics && (
+
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+
+    {/* Bar Chart */}
+
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+
+        <h3 className="text-lg font-bold text-gray-800 mb-5">
+            Exam Attempts
+        </h3>
+
+        <ResponsiveContainer width="100%" height={300}>
+
+            <BarChart
+                data={
+                    Object.entries(
+                        analytics.examAttempts || {}
+                    ).map(([name, value]) => ({
+                        name,
+                        value
+                    }))
+                }
+            >
+
+                <XAxis dataKey="name" />
+
+                <YAxis />
+
+                <Tooltip />
+
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} />
+
+            </BarChart>
+
+        </ResponsiveContainer>
+
+    </div>
+
+    {/* Pie Chart */}
+
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+
+        <h3 className="text-lg font-bold text-gray-800 mb-5">
+            Pass Rate
+        </h3>
+
+        <ResponsiveContainer width="100%" height={300}>
+
+            <PieChart>
+
+                <Pie
+                    data={[
+                        {
+                            name: "Pass",
+                            value: analytics.passPercentage
+                        },
+                        {
+                            name: "Fail",
+                            value: 100 - analytics.passPercentage
+                        }
+                    ]}
+                    dataKey="value"
+                    outerRadius={100}
+                    label
+                >
+
+                    <Cell />
+                    <Cell />
+
+                </Pie>
+
+                <Tooltip />
+
+            </PieChart>
+
+        </ResponsiveContainer>
+
+    </div>
+
+</div>
+
+)}
 
                 {/* Forms Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -282,8 +747,42 @@ function AdminDashboard() {
                                         type="text"
                                         placeholder="e.g. Mathematics Final Exam"
                                         className={inputClass}
+                                        value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                     />
+                                    <div>
+    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+        Positive Marks
+    </label>
+
+    <input
+        type="number"
+        step="0.01"
+        placeholder="e.g. 1"
+        className={inputClass}
+        value={positiveMarks}
+        onChange={(e) =>
+            setPositiveMarks(e.target.value)
+        }
+    />
+</div>
+
+<div>
+    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+        Negative Marks
+    </label>
+
+    <input
+        type="number"
+        step="0.01"
+        placeholder="e.g. 0.25"
+        className={inputClass}
+        value={negativeMarks}
+        onChange={(e) =>
+            setNegativeMarks(e.target.value)
+        }
+    />
+</div>
                                 </div>
 
                                 <div>
@@ -292,7 +791,36 @@ function AdminDashboard() {
                                         type="number"
                                         placeholder="Duration in minutes"
                                         className={inputClass}
+                                        value={duration}
                                         onChange={(e) => setDuration(e.target.value)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                        Start Time
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        className={inputClass}
+                                        value={startTime}
+                                        onChange={(e) =>
+                                            setStartTime(e.target.value)
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                        End Time
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        className={inputClass}
+                                        value={endTime}
+                                        onChange={(e) =>
+                                            setEndTime(e.target.value)
+                                        }
                                     />
                                 </div>
 
@@ -347,7 +875,10 @@ function AdminDashboard() {
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Select Exam</label>
                                     <select
                                         className={inputClass}
-                                        onChange={(e) => setSelectedExamId(e.target.value)}
+                                        onChange={(e) => {
+
+                                                setSelectedExamId(e.target.value);
+                                                fetchQuestions(e.target.value); }}
                                     >
                                         <option value="">— Choose an exam —</option>
                                         {exams.map((exam) => (
@@ -397,6 +928,39 @@ function AdminDashboard() {
                                     />
                                 </div>
 
+                                <div className="border border-dashed border-emerald-200 rounded-2xl p-5 bg-emerald-50/40">
+
+    <div className="flex items-center justify-between gap-4 flex-wrap">
+
+        <div>
+
+            <h3 className="text-sm font-bold text-gray-800">
+                Bulk Upload Questions
+            </h3>
+
+            <p className="text-xs text-gray-500 mt-1">
+                Upload Excel (.xlsx) file
+            </p>
+
+        </div>
+
+        <label className="cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm">
+
+            Upload Excel
+
+            <input
+                type="file"
+                accept=".xlsx,.xls"
+                hidden
+                onChange={handleBulkUpload}
+            />
+
+        </label>
+
+    </div>
+
+</div>
+
                                 <button
                                     onClick={addQuestion}
                                     disabled={loadingQuestion}
@@ -420,10 +984,87 @@ function AdminDashboard() {
                                     )}
                                 </button>
 
-                            </div>
+                                                       </div>
                         </div>
 
                     </div>
+
+                    {selectedExamId && (
+
+                        <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+                            <h2 className="text-lg font-bold text-gray-800 mb-5">
+                                Exam Questions
+                            </h2>
+
+                            {loadingQuestions ? (
+
+                                <p className="text-sm text-gray-500">
+                                    Loading questions...
+                                </p>
+
+                            ) : examQuestions.length === 0 ? (
+
+                                <p className="text-sm text-gray-400">
+                                    No questions added yet.
+                                </p>
+
+                            ) : (
+
+                                <div className="space-y-4">
+
+                                    {examQuestions.map((question, index) => (
+
+                                        <div
+                                            key={question.id}
+                                            className="border border-gray-100 rounded-2xl p-5 flex justify-between items-start"
+                                        >
+
+                                            <div>
+
+                                                <p className="font-semibold text-gray-800">
+                                                    Q{index + 1}. {question.questionText}
+                                                </p>
+
+                                                <p className="text-sm text-gray-500 mt-2">
+                                                    Correct Answer:
+                                                    <span className="font-bold text-emerald-600 ml-1">
+                                                        {question.correctAnswer}
+                                                    </span>
+                                                </p>
+
+                                            </div>
+
+                                            <div className="flex items-center">
+
+    <button
+        onClick={() =>
+            openEditModal(question)
+        }
+        className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-xl text-sm font-semibold mr-2"
+    >
+        Edit
+    </button>
+
+    <button
+        onClick={() =>
+            deleteQuestion(question.id)
+        }
+        className="bg-red-50 hover:bg-red-100 text-red-500 px-4 py-2 rounded-xl text-sm font-semibold"
+    >
+        Delete
+    </button>
+
+</div>
+
+                                        </div>
+                                    ))}
+
+                                </div>
+                            )}
+
+                        </div>
+                    )}
 
                 </div>
 
@@ -484,7 +1125,282 @@ function AdminDashboard() {
                     </div>
                 )}
 
+                   {/* Violation Monitoring */}
+
+            <div className="mb-10 w-full">
+
+                <div className="flex items-center justify-between mb-5">
+
+                    <div>
+
+                        <h3 className="text-xl font-bold text-gray-800 tracking-tight">
+
+                            Suspicious Activities
+
+                        </h3>
+
+                        <p className="text-sm text-gray-400 mt-0.5">
+
+                            Recent proctoring violations
+
+                        </p>
+
+                    </div>
+
+                    <span className="bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-full">
+
+                        {violations.length} Total
+
+                    </span>
+
+                </div>
+
+                <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+                    {/* Main Table */}
+
+                    <div className="lg:col-span-8 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+
+                        <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+
+                            <div>
+
+                                <h4 className="text-lg font-bold text-gray-800">
+
+                                    Recent Violations
+
+                                </h4>
+
+                                <p className="text-sm text-gray-400 mt-1">
+
+                                    Latest suspicious activities detected
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        {violations.length === 0 ? (
+
+                            <div className="p-12 text-center text-gray-400">
+
+                                No suspicious activities detected yet.
+
+                            </div>
+
+                        ) : (
+
+                            <div className="divide-y divide-gray-100">
+
+                                {[...violations]
+                                    .reverse()
+                                    .slice(0, 8)
+                                    .map((violation) => (
+
+                                    <div
+                                        key={violation.id}
+                                        className="px-6 py-5 hover:bg-red-50/30 transition-colors"
+                                    >
+
+                                        <div className="flex items-start justify-between gap-4">
+
+                                            <div className="flex items-start gap-4">
+
+                                                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center font-bold shrink-0">
+
+                                                    {violation.studentName
+                                                        ?.charAt(0)
+                                                        ?.toUpperCase()}
+
+                                                </div>
+
+                                                <div>
+
+                                                    <h4 className="font-bold text-gray-800">
+
+                                                        {violation.studentName}
+
+                                                    </h4>
+
+                                                    <p className="text-sm text-gray-500 mt-1">
+
+                                                        {violation.examTitle}
+
+                                                    </p>
+
+                                                    <div className="mt-3">
+
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+
+                                                            {violation.violationType}
+
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                ))}
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+                    {/* Stats Side Card */}
+
+                    <div className="lg:col-span-4 bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 rounded-3xl shadow-xl p-8 text-white relative overflow-hidden">
+
+                        <div className="relative z-10">
+
+                            <p className="text-red-100 text-xs uppercase tracking-widest font-semibold mb-2">
+
+                                Monitoring
+
+                            </p>
+
+                            <h3 className="text-5xl font-black tracking-tight">
+
+                                {violations.length}
+
+                            </h3>
+
+                            <p className="text-red-100 mt-2">
+
+                                Total Violations Logged
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
+
+            {/* FACE VERIFICATION SECTION */}
+
+            <div className="mt-10 w-full">
+
+                <div className="flex items-center justify-between mb-5">
+
+                    <div>
+
+                        <h3 className="text-xl font-bold text-gray-800 tracking-tight">
+
+                            Face Verification Logs
+
+                        </h3>
+
+                        <p className="text-sm text-gray-400 mt-0.5">
+
+                            Compare start and end exam snapshots
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 justify-center">
+
+                    {results
+    .filter((r) => r.startFaceImage)
+                        // .filter(
+                        //     (r) =>
+                        //         r.startFaceImage &&
+                        //         r.endFaceImage
+                        // )
+                        .slice()
+                        .reverse()
+                        .map((result) => (
+
+                        <div
+                            key={result.id}
+                            className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden max-w-2xl"
+                        >
+
+                            <div className="px-6 py-5 border-b border-gray-100">
+
+                                <h4 className="font-bold text-gray-800">
+
+                                    {result.studentName}
+
+                                </h4>
+
+                                <p className="text-sm text-gray-400 mt-1">
+
+                                    {result.examTitle}
+
+                                </p>
+
+                            </div>
+
+                            <div className="p-6">
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                    <div>
+
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
+
+                                            Start Exam
+
+                                        </p>
+
+                                        <img
+                                            src={
+                                                result.startFaceImage
+                                            }
+                                            alt="Start Face"
+                                            className="w-full h-56 object-cover rounded-2xl border border-gray-200"
+                                        />
+
+                                    </div>
+
+                                    <div>
+
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
+
+                                            End Exam
+
+                                        </p>
+
+                                        <img
+                                            src={
+    result.endFaceImage ||
+    result.startFaceImage
+}
+                                            alt="End Face"
+                                            className="w-full h-56 object-cover rounded-2xl border border-gray-200"
+                                        />
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    ))}
+
+                </div>
+
+            </div>
+
+        </div>
+
+            
 
             {/* Confirmation Modals — inside root div */}
             <ConfirmModal
@@ -506,6 +1422,107 @@ function AdminDashboard() {
                 onConfirm={confirmLogout}
                 onCancel={() => setShowLogoutConfirm(false)}
             />
+
+            {editingQuestion && (
+
+<div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8">
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            Edit Question
+        </h2>
+
+        <div className="space-y-4">
+
+            <input
+                type="text"
+                value={editQuestionText}
+                onChange={(e) =>
+                    setEditQuestionText(e.target.value)
+                }
+                className={inputClass}
+                placeholder="Question"
+            />
+
+            <input
+                type="text"
+                value={editOptionA}
+                onChange={(e) =>
+                    setEditOptionA(e.target.value)
+                }
+                className={inputClass}
+                placeholder="Option A"
+            />
+
+            <input
+                type="text"
+                value={editOptionB}
+                onChange={(e) =>
+                    setEditOptionB(e.target.value)
+                }
+                className={inputClass}
+                placeholder="Option B"
+            />
+
+            <input
+                type="text"
+                value={editOptionC}
+                onChange={(e) =>
+                    setEditOptionC(e.target.value)
+                }
+                className={inputClass}
+                placeholder="Option C"
+            />
+
+            <input
+                type="text"
+                value={editOptionD}
+                onChange={(e) =>
+                    setEditOptionD(e.target.value)
+                }
+                className={inputClass}
+                placeholder="Option D"
+            />
+
+            <input
+                type="text"
+                value={editCorrectAnswer}
+                onChange={(e) =>
+                    setEditCorrectAnswer(e.target.value)
+                }
+                className={inputClass}
+                placeholder="Correct Answer"
+            />
+
+        </div>
+
+        <div className="flex justify-end gap-3 mt-8">
+
+            <button
+                onClick={() =>
+                    setEditingQuestion(null)
+                }
+                className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold"
+            >
+                Cancel
+            </button>
+
+            <button
+                onClick={updateQuestion}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+)}
+
+
 
         </div>
     );

@@ -7,7 +7,19 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ResultRepository extends JpaRepository<Result, Long> {
+public interface ResultRepository
+        extends JpaRepository<Result, Long> {
 
-    List<Result> findByStudentNameOrderBySubmittedAtDesc(String studentName);
+    List<Result> findByStudentNameOrderBySubmittedAtDesc(
+            String studentName
+    );
+
+    boolean existsByStudentNameAndExamTitle(
+            String studentName,
+            String examTitle
+    );
+
+    long count();
+
+    List<Result> findAll();
 }

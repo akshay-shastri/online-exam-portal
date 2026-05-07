@@ -12,7 +12,11 @@ function StudentDashboard() {
     const [exams, setExams] = useState([]);
     const [examsLoading, setExamsLoading] = useState(true);
     const [examsError, setExamsError] = useState(false);
+    const [attemptedExams, setAttemptedExams] = useState({});
     const [showDropdown, setShowDropdown] = useState(false);
+    const [showNotifications,setShowNotifications] = useState(false);
+
+    const [notifications,setNotifications] = useState([]);
     const [showModal, setShowModal] = useState(false);
 
     const [currentPassword, setCurrentPassword] = useState("");
@@ -31,15 +35,64 @@ function StudentDashboard() {
     const { dark, toggle: toggleTheme } = useTheme();
 
     useEffect(() => {
-        fetchExams();
-    }, []);
+
+    fetchExams();
+
+    fetchNotifications();
+
+    const interval =
+        setInterval(() => {
+
+            fetchNotifications();
+
+        }, 15000);
+
+    return () =>
+        clearInterval(interval);
+
+}, []);
+
+    const fetchNotifications = async () => {
+
+    try {
+
+        const response =
+            await API.get(
+                `/notifications/${email}`
+            );
+
+        setNotifications(
+            response.data
+        );
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
 
     const fetchExams = async () => {
         setExamsLoading(true);
         setExamsError(false);
         try {
             const response = await API.get("/exams");
-            setExams(response.data);
+            const examList = response.data;
+            setExams(examList);
+
+        
+
+            // Check attempt status for each exam
+            const studentName = localStorage.getItem("name") || "";
+            const attemptChecks = await Promise.all(
+                examList.map((exam) =>
+                    API.get(`/results/check/${encodeURIComponent(studentName)}/${encodeURIComponent(exam.title)}`)
+                        .then((r) => ({ id: exam.id, attempted: r.data.attempted }))
+                        .catch(() => ({ id: exam.id, attempted: false }))
+                )
+            );
+            const attemptMap = {};
+            attemptChecks.forEach(({ id, attempted }) => { attemptMap[id] = attempted; });
+            setAttemptedExams(attemptMap);
         } catch (error) {
             console.log(error);
             setExamsError(true);
@@ -158,6 +211,101 @@ function StudentDashboard() {
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
 
+                <div className="relative">
+
+    <button
+        onClick={() =>
+            setShowNotifications(
+                !showNotifications
+            )
+        }
+        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative ${
+            dark
+                ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+        }`}
+    >
+
+        🔔
+
+        {notifications.length > 0 && (
+
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+
+                {notifications.length}
+
+            </span>
+
+        )}
+
+    </button>
+
+    {showNotifications && (
+
+        <div className={`absolute right-0 mt-3 w-80 rounded-2xl shadow-2xl border overflow-hidden z-50 ${
+            dark
+                ? "bg-gray-900 border-gray-700"
+                : "bg-white border-gray-100"
+        }`}>
+
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+
+                <h3 className={`font-bold text-sm ${
+                    dark
+                        ? "text-white"
+                        : "text-gray-800"
+                }`}>
+                    Notifications
+                </h3>
+
+            </div>
+
+            <div className="max-h-80 overflow-y-auto">
+
+                {notifications.length === 0 ? (
+
+                    <div className="p-6 text-center text-sm text-gray-400">
+                        No notifications
+                    </div>
+
+                ) : (
+
+                    notifications.map((n) => (
+
+                        <div
+                            key={n.id}
+                            className={`px-5 py-4 border-b last:border-none ${
+                                dark
+                                    ? "border-gray-700"
+                                    : "border-gray-100"
+                            }`}
+                        >
+
+                            <p className={`text-sm font-medium ${
+                                dark
+                                    ? "text-gray-200"
+                                    : "text-gray-700"
+                            }`}>
+                                {n.message}
+                            </p>
+
+                            <p className="text-xs text-blue-500 mt-1">
+                                {new Date(n.createdAt).toLocaleString()}
+                            </p>
+
+                        </div>
+                    ))
+
+                )}
+
+            </div>
+
+        </div>
+
+    )}
+
+</div>
+
                     {/* Theme toggle */}
                     <button
                         onClick={toggleTheme}
@@ -199,30 +347,66 @@ function StudentDashboard() {
                             </div>
 
                             <div className="py-1.5">
-                                <button
-                                    onClick={() => navigate("/history")}
-                                    className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${dark ? "text-gray-300 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-50"}`}
-                                >
-                                    <span className="text-base">📋</span>
-                                    <span className="font-medium">Exam History</span>
-                                </button>
 
-                                <button
-                                    onClick={openModal}
-                                    className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${dark ? "text-gray-300 hover:bg-gray-800" : "text-gray-700 hover:bg-gray-50"}`}
-                                >
-                                    <span className="text-base">⚙️</span>
-                                    <span className="font-medium">Settings</span>
-                                </button>
+    <button
+        onClick={() => navigate("/history")}
+        className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${
+            dark
+                ? "text-gray-300 hover:bg-gray-800"
+                : "text-gray-700 hover:bg-gray-50"
+        }`}
+    >
+        <span className="text-base">📋</span>
 
-                                <button
-                                    onClick={logout}
-                                    className="w-full text-left px-5 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-3"
-                                >
-                                    <span className="text-base">🚪</span>
-                                    <span className="font-medium">Logout</span>
-                                </button>
-                            </div>
+        <span className="font-medium">
+            Exam History
+        </span>
+    </button>
+
+    {/* LEADERBOARD BUTTON */}
+
+    <button
+        onClick={() => navigate("/leaderboard")}
+        className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${
+            dark
+                ? "text-gray-300 hover:bg-gray-800"
+                : "text-gray-700 hover:bg-gray-50"
+        }`}
+    >
+        <span className="text-base">🏆</span>
+
+        <span className="font-medium">
+            Leaderboard
+        </span>
+    </button>
+
+    <button
+        onClick={openModal}
+        className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center gap-3 ${
+            dark
+                ? "text-gray-300 hover:bg-gray-800"
+                : "text-gray-700 hover:bg-gray-50"
+        }`}
+    >
+        <span className="text-base">⚙️</span>
+
+        <span className="font-medium">
+            Settings
+        </span>
+    </button>
+
+    <button
+        onClick={logout}
+        className="w-full text-left px-5 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-3"
+    >
+        <span className="text-base">🚪</span>
+
+        <span className="font-medium">
+            Logout
+        </span>
+    </button>
+
+</div>
 
                         </div>
                     )}
@@ -461,7 +645,72 @@ function StudentDashboard() {
                 <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                    {exams.map((exam, index) => (
+                    {exams.map((exam, index) => {
+
+                        const now = Date.now();
+
+                        const examStart =
+                            new Date(exam.startTime).getTime();
+
+                        const examEnd =
+                            new Date(exam.endTime).getTime();
+
+                        let examStatus = "ACTIVE";
+
+                        let countdownText = "";
+
+if (examStatus === "UPCOMING") {
+
+    const diff =
+        examStart - now;
+
+    const hours =
+        Math.floor(diff / (1000 * 60 * 60));
+
+    const minutes =
+        Math.floor(
+            (diff % (1000 * 60 * 60)) /
+            (1000 * 60)
+        );
+
+    countdownText =
+        `Starts in ${hours}h ${minutes}m`;
+
+} else if (
+    examStatus === "ACTIVE"
+) {
+
+    const diff =
+        examEnd - now;
+
+    const hours =
+        Math.floor(diff / (1000 * 60 * 60));
+
+    const minutes =
+        Math.floor(
+            (diff % (1000 * 60 * 60)) /
+            (1000 * 60)
+        );
+
+    countdownText =
+        `Ends in ${hours}h ${minutes}m`;
+
+} else {
+
+    countdownText =
+        "Exam Closed";
+}
+
+                        if (now < examStart) {
+
+                            examStatus = "UPCOMING";
+
+                        } else if (now > examEnd) {
+
+                            examStatus = "EXPIRED";
+                        }
+
+                        return (
 
                         <div
                             key={exam.id}
@@ -493,20 +742,78 @@ function StudentDashboard() {
                                     Test your skills and improve your performance with this examination.
                                 </p>
 
+                                <div
+    className={`mb-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+        examStatus === "ACTIVE"
+            ? "bg-green-50 text-green-600 border border-green-100"
+            : examStatus === "UPCOMING"
+            ? "bg-yellow-50 text-yellow-700 border border-yellow-100"
+            : "bg-red-50 text-red-500 border border-red-100"
+    }`}
+>
+
+    <span
+        className={`w-2 h-2 rounded-full ${
+            examStatus === "ACTIVE"
+                ? "bg-green-500 animate-pulse"
+                : examStatus === "UPCOMING"
+                ? "bg-yellow-500"
+                : "bg-red-500"
+        }`}
+    />
+
+    {countdownText}
+
+</div>
+
                                 <button
                                     onClick={() => startExam(exam.id)}
-                                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-blue-300 hover:shadow-md flex items-center justify-center gap-2 group/btn"
+                                    disabled={
+                                        !!attemptedExams[exam.id] ||
+                                        examStatus !== "ACTIVE"
+                                    }
+                                    className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 group/btn ${
+                                        attemptedExams[exam.id] || examStatus !== "ACTIVE"
+                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                            : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-sm hover:shadow-blue-300 hover:shadow-md"
+                                    }`}
                                 >
-                                    Start Exam
-                                    <svg className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
+                                    {attemptedExams[exam.id] ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Already Attempted
+                                        </>
+                                    ) : examStatus === "UPCOMING" ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Upcoming
+                                        </>
+                                    ) : examStatus === "EXPIRED" ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Expired
+                                        </>
+                                    ) : (
+                                        <>
+                                            Start Exam
+                                            <svg className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </>
+                                    )}
                                 </button>
 
                             </div>
 
                         </div>
-                    ))}
+                        );
+                    })}
 
                 </div>
 

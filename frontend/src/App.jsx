@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
+import Leaderboard from "./pages/Leaderboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -10,6 +10,7 @@ import ResultPage from "./pages/ResultPage";
 import HistoryPage from "./pages/HistoryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import useTheme from "./hooks/useTheme";
+import VerifyOtp from "./pages/VerifyOtp";
 
 function App() {
   // Ensure theme class is initialized globally so Tailwind `dark:` variants work across pages
@@ -34,6 +35,11 @@ function App() {
       <Routes>
 
         <Route path="/" element={<Login />} />
+
+        <Route path="/leaderboard" element={ <ProtectedRoute allowedRole="STUDENT"> <Leaderboard />
+    </ProtectedRoute>
+  }
+/>
 
         <Route path="/login" element={<Login />} />
 
@@ -83,6 +89,11 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+    path="/verify-otp"
+    element={<VerifyOtp />}
+/>
 
       </Routes>
 

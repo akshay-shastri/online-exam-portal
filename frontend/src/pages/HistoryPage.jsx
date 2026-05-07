@@ -2,6 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid
+} from "recharts";
 
 function HistoryPage() {
 
@@ -41,16 +52,133 @@ function HistoryPage() {
     };
 
     const formatDate = (dateStr) => {
-        if (!dateStr) return "—";
-        const d = new Date(dateStr);
-        return d.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+
+    if (!dateStr) return "—";
+
+    const d = new Date(dateStr);
+
+    return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
+const totalExams =
+    results.length;
+
+const averagePercentage =
+    totalExams > 0
+        ? (
+            results.reduce(
+                (sum, r) =>
+                    sum + r.percentage,
+                0
+            ) / totalExams
+        ).toFixed(1)
+        : 0;
+
+const bestPercentage =
+    results.length > 0
+        ? Math.max(
+            ...results.map(
+                (r) => r.percentage || 0
+            )
+        )
+        : 0;
+
+const passedExams =
+    results.filter(
+        (r) => r.percentage >= 40
+    ).length;
+
+const passRate =
+    totalExams > 0
+        ? Math.round(
+            (passedExams /
+                totalExams) *
+                100
+        )
+        : 0;
+
+
+const chartData =
+    results.map((r, index) => ({
+        exam:
+            `Exam ${index + 1}`,
+        percentage:
+            r.percentage,
+    }));
+
+    
+let performanceInsight =
+    "Complete more exams to unlock AI insights.";
+
+if (results.length >= 2) {
+
+    const latest =
+        results[results.length - 1]
+            .percentage;
+
+    const previous =
+        results[results.length - 2]
+            .percentage;
+
+    if (latest > previous) {
+
+        performanceInsight =
+            "Your performance is improving consistently 📈";
+
+    } else if (
+        latest < previous
+    ) {
+
+        performanceInsight =
+            "Recent performance dropped slightly. More practice is recommended 📚";
+
+    } else {
+
+        performanceInsight =
+            "Your performance is stable across recent exams ⚖️";
+    }
+}
+const exportPDF = async () => {
+
+    const input =
+        document.getElementById("history-content");
+
+    if (!input) return;
+
+    const canvas =
+        await html2canvas(input, {
+            scale: 2
         });
-    };
+
+    const imgData =
+        canvas.toDataURL("image/png");
+
+    const pdf =
+        new jsPDF("p", "mm", "a4");
+
+    const pdfWidth =
+        pdf.internal.pageSize.getWidth();
+
+    const pdfHeight =
+        (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(
+        imgData,
+        "PNG",
+        0,
+        0,
+        pdfWidth,
+        pdfHeight
+    );
+
+    pdf.save("exam-history.pdf");
+};
 
     return (
 
@@ -127,8 +255,7 @@ function HistoryPage() {
 
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-6xl mx-auto">
-
+            <div id="history-content" className="px-6 md:px-12 py-10 max-w-6xl mx-auto">
                 {/* Hero Banner */}
                 <div className="mb-10 bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 rounded-3xl px-8 py-9 md:px-12 shadow-xl shadow-blue-200 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-2xl pointer-events-none" />
@@ -149,6 +276,196 @@ function HistoryPage() {
                         </div>
                     </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800 dark:border-gray-700">
+
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+            Average Percentage
+        </p>
+
+        <h3 className="text-3xl font-extrabold text-blue-600">
+            {averagePercentage}%
+        </h3>
+
+    </div>
+
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800 dark:border-gray-700">
+
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+            Best Percentage
+        </p>
+
+        <h3 className="text-3xl font-extrabold text-emerald-600">
+            {bestPercentage}%
+        </h3>
+
+    </div>
+
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800 dark:border-gray-700">
+
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+            Exams Attempted
+        </p>
+
+        <h3 className="text-3xl font-extrabold text-indigo-600">
+            {totalExams}
+        </h3>
+
+    </div>
+
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 dark:bg-gray-800 dark:border-gray-700">
+
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+            Pass Rate
+        </p>
+
+        <h3 className="text-3xl font-extrabold text-amber-500">
+            {passRate}%
+        </h3>
+
+    </div>
+
+</div>
+
+{results.length >= 2 ? (
+<div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-7 mb-8 dark:bg-gray-800 dark:border-gray-700">
+
+    <div className="flex items-center justify-between mb-6">
+
+        <div>
+
+            <h3 className="text-xl font-extrabold text-gray-800 dark:text-white">
+                Performance Trend
+            </h3>
+
+            <p className="text-sm text-gray-400 mt-1 dark:text-gray-300">
+                Track your exam performance over time
+            </p>
+
+        </div>
+
+        <div className="px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">
+            Analytics
+        </div>
+
+    </div>
+
+    <div className="h-80">
+
+        <ResponsiveContainer
+            width="100%"
+            height="100%"
+        >
+
+            <LineChart data={chartData}>
+
+                <CartesianGrid
+                    strokeDasharray="3 3"
+                />
+
+                <XAxis dataKey="exam" />
+
+                <YAxis domain={[0, 100]} />
+
+                <Tooltip />
+
+                <Line
+                    type="monotone"
+                    dataKey="percentage"
+                    strokeWidth={3}
+                    dot={{ r: 5 }}
+                />
+
+            </LineChart>
+
+        </ResponsiveContainer>
+
+    </div>
+
+</div>
+
+) : (
+
+    <div className="bg-white rounded-3xl border border-dashed border-blue-200 shadow-sm p-10 mb-8 text-center dark:bg-gray-800 dark:border-blue-700">
+
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-50 flex items-center justify-center mb-5">
+
+            <svg
+                className="w-8 h-8 text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M11 19V6m0 0L7 10m4-4l4 4"
+                />
+            </svg>
+
+        </div>
+
+        <h3 className="text-xl font-extrabold text-gray-800 mb-2 dark:text-white">
+            Performance Trend Locked
+        </h3>
+
+        <p className="text-sm text-gray-400 max-w-md mx-auto dark:text-gray-300">
+            Complete more exams to unlock advanced performance analytics and trend tracking.
+        </p>
+
+    </div>
+
+)}
+
+
+<div className="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-3xl p-7 mb-8 shadow-lg text-white relative overflow-hidden">
+
+    <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+
+    <div className="relative z-10">
+
+        <p className="text-xs uppercase tracking-[0.25em] font-bold text-blue-100 mb-3">
+            AI PERFORMANCE INSIGHT
+        </p>
+
+        <h3 className="text-2xl font-extrabold leading-relaxed max-w-3xl">
+            {performanceInsight}
+        </h3>
+
+    </div>
+
+</div>
+
+
+                <div className="flex justify-end mb-5">
+
+    <button
+        onClick={exportPDF}
+        className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+    >
+
+        <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+        >
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v12m0 0l-4-4m4 4l4-4m-9 8h10"
+            />
+        </svg>
+
+        Export PDF
+
+    </button>
+
+</div>
 
                 {/* Back button */}
                 <button
@@ -243,15 +560,25 @@ function HistoryPage() {
                                         <div className="grid grid-cols-3 gap-2 mb-4">
                                             <div className="bg-gray-50 rounded-xl px-2 py-3 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
                                                 <p className="text-lg font-extrabold text-gray-800 dark:text-gray-100">{result.score}</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Score</p>
+                                               <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Final Marks</p>
                                             </div>
                                             <div className="bg-gray-50 rounded-xl px-2 py-3 text-center border border-gray-100 dark:bg-gray-700 dark:border-gray-700">
-                                                <p className="text-lg font-extrabold text-gray-800 dark:text-gray-100">{result.totalQuestions}</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Total</p>
-                                            </div>
+
+    <p className="text-lg font-extrabold text-gray-800 dark:text-gray-100">
+        {Math.round(
+            (result.percentage / 100) *
+            result.totalQuestions
+        )}
+    </p>
+
+    <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">
+        Correct
+    </p>
+
+</div>
                                             <div className={`rounded-xl px-2 py-3 text-center border ${passed ? "bg-blue-50 border-blue-100" : "bg-red-50 border-red-100"} dark:bg-gray-700 dark:border-gray-700`}>
                                                 <p className={`text-lg font-extrabold ${passed ? "text-blue-600" : "text-red-500"}`}>{result.percentage}%</p>
-                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">Accuracy</p>
+                                                <p className="text-[10px] text-gray-400 font-medium mt-0.5 dark:text-gray-300 uppercase tracking-wide">percentage</p>
                                             </div>
                                         </div>
 
@@ -286,5 +613,4 @@ function HistoryPage() {
         </div>
     );
 }
-
 export default HistoryPage;

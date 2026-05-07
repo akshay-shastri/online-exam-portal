@@ -19,6 +19,14 @@ public class User {
 
     private String role;
 
+    private boolean verified = false;
+
+    private String otp;
+
+    private Long otpGeneratedTime;
+
+
+
     public User() {
     }
 
@@ -69,4 +77,31 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+
+    public boolean isVerified() {
+    return verified;
+}
+
+public void setVerified(boolean verified) {
+    this.verified = verified;
+}
+
+public String getOtp() {
+    return otp;
+}
+
+public void setOtp(String otp) {
+    this.otp = otp;
+}
+
+public Long getOtpGeneratedTime() {
+    return otpGeneratedTime;
+}
+
+public void setOtpGeneratedTime(
+        Long otpGeneratedTime
+) {
+    this.otpGeneratedTime =
+            otpGeneratedTime;
+}
 }
