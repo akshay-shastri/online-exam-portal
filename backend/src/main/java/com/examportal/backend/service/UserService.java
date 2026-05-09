@@ -28,7 +28,7 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder =
             new BCryptPasswordEncoder();
 
-    public User registerUser(User user) {
+   public User registerUser(User user) {
 
     String otp =
             String.valueOf(
@@ -50,10 +50,17 @@ public class UserService {
     User savedUser =
             userRepository.save(user);
 
-    emailService.sendOtpEmail(
-            user.getEmail(),
-            otp
-    );
+    try {
+
+        emailService.sendOtpEmail(
+                user.getEmail(),
+                otp
+        );
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+    }
 
     return savedUser;
 }

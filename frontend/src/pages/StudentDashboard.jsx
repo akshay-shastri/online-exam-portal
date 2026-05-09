@@ -597,7 +597,7 @@ function StudentDashboard() {
                             Welcome back, {name} 👋
                         </h2>
                         <p className="text-blue-100 text-base md:text-lg font-medium">
-                            Ready to test your knowledge today?
+                            Attend exams, track performance, and improve your skills.
                         </p>
                     </div>
                 </div>

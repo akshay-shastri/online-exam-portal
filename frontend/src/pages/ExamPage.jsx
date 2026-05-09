@@ -33,6 +33,7 @@ function ExamPage() {
     const [bookmarkedQuestions, setBookmarkedQuestions] = useState([]);
     const [startFaceImage, setStartFaceImage] = useState(null);
     const [endFaceImage,setEndFaceImage] = useState(null);
+    const isMobile = window.innerWidth < 768;
 
     // Refs — always hold current values, no stale closure issues
     const violationsRef = useRef(0);
@@ -784,16 +785,37 @@ const reEnterFullscreen = async () => {
     const timerPercentage = (displayTime / totalDuration) * 100;
     const optionLabels = ["A", "B", "C", "D"];
 
+
+    if (isMobile) {
+
     return (
 
-        <div className={`min-h-screen relative ${examStarted ? "select-none": "" } ${flashWarning ? "bg-red-200": "bg-[#f0f4ff] dark:bg-gray-950"} transition-colors duration-150`}>
+        <div className="min-h-screen flex items-center justify-center bg-black text-white p-6 text-center">
 
-        onCopy={(e) => {
-            if (examStarted) {
-                e.preventDefault();
-                handleViolation("Copy attempt detected");
-            }
-        }}
+            <div>
+
+                <h1 className="text-3xl font-bold mb-4">
+                    Desktop Required
+                </h1>
+
+                <p className="text-gray-300 text-lg">
+                    This exam can only be attended on a desktop or laptop device.
+                </p>
+
+            </div>
+
+        </div>
+    );
+}
+    return (
+
+        <div
+    className={`min-h-screen relative ${examStarted ? "select-none": "" } ${flashWarning ? "bg-red-200": "bg-[#f0f4ff] dark:bg-gray-950"} transition-colors duration-150`}
+
+    onCopy={(e) => { if (examStarted) {e.preventDefault();
+            handleViolation("Copy attempt detected");
+        }
+    }}>
 
             {/* Header */}
             <div className="sticky top-0 z-50 bg-white border-b dark:bg-gray-900 dark:border-gray-700">
