@@ -1,9 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.DEV
-    ? "http://localhost:8080"
-    : "https://online-exam-portal-7agm.onrender.com";
-
+const BASE_URL =
+    "https://unfazed-issue-macarena.ngrok-free.dev";
 const API = axios.create({
     baseURL: BASE_URL,
 });
