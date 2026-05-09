@@ -1,148 +1,206 @@
 package com.examportal.backend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import okhttp3.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${RESEND_API_KEY}")
+    private String resendApiKey;
 
-    public void sendOtpEmail(String toEmail, String otp) {
+    private final OkHttpClient client =
+            new OkHttpClient();
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
+    private void sendEmail(
+            String toEmail,
+            String subject,
+            String body
+    ) {
 
-        message.setTo(toEmail);
+        MediaType mediaType =
+                MediaType.parse(
+                        "application/json"
+                );
 
-        message.setSubject(
-                "Smart Exam Portal - Email Verification"
+        String json = """
+        {
+          "from": "Smart Exam Portal <onboarding@resend.dev>",
+          "to": ["%s"],
+          "subject": "%s",
+          "text": "%s"
+        }
+        """.formatted(
+                toEmail,
+                subject,
+                body.replace("\n", "\\n")
         );
 
-        message.setText(
+        RequestBody requestBody =
+                RequestBody.create(
+                        json,
+                        mediaType
+                );
+
+        Request request =
+                new Request.Builder()
+                        .url(
+                                "https://api.resend.com/emails"
+                        )
+                        .post(requestBody)
+                        .addHeader(
+                                "Authorization",
+                                "Bearer " + resendApiKey
+                        )
+                        .addHeader(
+                                "Content-Type",
+                                "application/json"
+                        )
+                        .build();
+
+        try (
+                Response response =
+                        client.newCall(request).execute()
+        ) {
+
+            if (!response.isSuccessful()) {
+
+                throw new RuntimeException(
+                        "Failed to send email"
+                );
+            }
+
+        } catch (IOException e) {
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendOtpEmail(
+            String toEmail,
+            String otp
+    ) {
+
+        String subject =
+                "Smart Exam Portal - Email Verification";
+
+        String body =
                 "Your OTP for email verification is: "
-                        + otp +
-                        "\n\nThis OTP will expire in 5 minutes."
-        );
+                        + otp
+                        + "\n\nThis OTP will expire in 5 minutes.";
 
-        mailSender.send(message);
+        sendEmail(
+                toEmail,
+                subject,
+                body
+        );
     }
 
     public void sendResultEmail(
-        String toEmail,
-        String studentName,
-        String examTitle,
-        double score,
-        double percentage
-) {
+            String toEmail,
+            String studentName,
+            String examTitle,
+            double score,
+            double percentage
+    ) {
 
-    String status =
-            percentage >= 40
-                    ? "PASSED"
-                    : "FAILED";
+        String status =
+                percentage >= 40
+                        ? "PASSED"
+                        : "FAILED";
 
-    SimpleMailMessage message =
-            new SimpleMailMessage();
+        String subject =
+                "Exam Result - " + examTitle;
 
-    message.setTo(toEmail);
+        String body =
 
-    message.setSubject(
-            "Exam Result - " + examTitle
-    );
+                "Hello " + studentName + ",\n\n"
 
-    message.setText(
+                        + "Your exam has been completed successfully.\n\n"
 
-            "Hello " + studentName + ",\n\n" +
+                        + "Exam: " + examTitle + "\n"
 
-            "Your exam has been completed successfully.\n\n" +
+                        + "Score: " + score + "\n"
 
-            "Exam: " + examTitle + "\n" +
+                        + "Percentage: " + percentage + "%\n"
 
-            "Score: " + score + "\n" +
+                        + "Status: " + status + "\n\n"
 
-            "Percentage: " + percentage + "%\n" +
+                        + "Thank you for using Smart Exam Portal.";
 
-            "Status: " + status + "\n\n" +
+        sendEmail(
+                toEmail,
+                subject,
+                body
+        );
+    }
 
-            "Thank you for using Smart Exam Portal.");
+    public void sendReminderEmail(
+            String toEmail,
+            String studentName,
+            String examTitle,
+            String examTime
+    ) {
 
-    mailSender.send(message);
-}
+        String subject =
+                "Upcoming Exam Reminder";
 
-public void sendReminderEmail(
-        String toEmail,
-        String studentName,
-        String examTitle,
-        String examTime
-) {
+        String body =
 
-    SimpleMailMessage message =
-            new SimpleMailMessage();
+                "Hello " + studentName + ",\n\n"
 
-    message.setTo(toEmail);
+                        + "Reminder: Your exam is scheduled soon.\n\n"
 
-    message.setSubject(
-            "Upcoming Exam Reminder"
-    );
+                        + "Exam: " + examTitle + "\n"
 
-    message.setText(
+                        + "Start Time: " + examTime + "\n\n"
 
-            "Hello " + studentName + ",\n\n" +
+                        + "Please be prepared before the exam begins.\n\n"
 
-            "Reminder: Your exam is scheduled soon.\n\n" +
+                        + "Best of luck!\n"
 
-            "Exam: " + examTitle + "\n" +
+                        + "Smart Exam Portal";
 
-            "Start Time: " + examTime + "\n\n" +
+        sendEmail(
+                toEmail,
+                subject,
+                body
+        );
+    }
 
-            "Please be prepared before the exam begins.\n\n" +
+    public void sendExamCreatedEmail(
+            String toEmail,
+            String studentName,
+            String examTitle,
+            String examTime
+    ) {
 
-            "Best of luck!\n" +
+        String subject =
+                "Exam Scheduled Successfully";
 
-            "Smart Exam Portal"
-    );
+        String body =
 
-    mailSender.send(message);
-}
+                "Hello " + studentName + ",\n\n"
 
+                        + "A new exam has been scheduled for you.\n\n"
 
-public void sendExamCreatedEmail(
-        String toEmail,
-        String studentName,
-        String examTitle,
-        String examTime
-) {
+                        + "Exam: " + examTitle + "\n"
 
-    SimpleMailMessage message =
-            new SimpleMailMessage();
+                        + "Start Time: " + examTime + "\n\n"
 
-    message.setTo(toEmail);
+                        + "Please login to the Smart Exam Portal before the exam starts.\n\n"
 
-    message.setSubject(
-            "Exam Scheduled Successfully"
-    );
+                        + "Best of luck!\n"
 
-    message.setText(
+                        + "Smart Exam Portal";
 
-            "Hello " + studentName + ",\n\n"
-
-            + "A new exam has been scheduled for you.\n\n"
-
-            + "Exam: " + examTitle + "\n"
-
-            + "Start Time: " + examTime + "\n\n"
-
-            + "Please login to the Smart Exam Portal before the exam starts.\n\n"
-
-            + "Best of luck!\n"
-
-            + "Smart Exam Portal"
-    );
-
-    mailSender.send(message);
-}
-
+        sendEmail(
+                toEmail,
+                subject,
+                body
+        );
+    }
 }
