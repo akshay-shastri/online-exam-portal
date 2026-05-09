@@ -56,9 +56,8 @@ public class UserService {
 
     } catch (Exception e) {
 
-        throw new RuntimeException(
-                "Failed to send OTP email"
-        );
+        e.printStackTrace();
+        throw new RuntimeException("Failed to send OTP email");
     }
 
     return userRepository.save(user);
