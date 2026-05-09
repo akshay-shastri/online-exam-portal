@@ -68,6 +68,9 @@ public class EmailService {
 
             if (!response.isSuccessful()) {
 
+                System.out.println(response.body().string()
+);
+
                 throw new RuntimeException(
                         "Failed to send email"
                 );
