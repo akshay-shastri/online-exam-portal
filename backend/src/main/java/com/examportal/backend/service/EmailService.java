@@ -28,7 +28,7 @@ public class EmailService {
 
         String json = """
         {
-          "from": "Smart Exam Portal <onboarding@resend.dev>",
+          "from": "onboarding@resend.dev",
           "to": ["%s"],
           "subject": "%s",
           "text": "%s"
