@@ -52,7 +52,7 @@ public class ExamService {
         }
 
         try {
-
+            System.out.println("Sending exam creation email to: "+ user.getEmail());
             emailService.sendExamCreatedEmail(
                     user.getEmail(),
                     user.getName(),
