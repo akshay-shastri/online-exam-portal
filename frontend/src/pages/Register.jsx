@@ -21,7 +21,8 @@ function Register() {
             toast.success("OTP sent to your email!");
             setTimeout(() => navigate("/verify-otp", { state: { email } }), 1500);
         } catch (error) {
-            toast.error("Registration failed. Please try again.");
+            toast.error(error.response?.data || "Registration failed"
+);
         } finally {
             setLoading(false);
         }

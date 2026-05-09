@@ -47,9 +47,6 @@ public class UserService {
             System.currentTimeMillis()
     );
 
-    User savedUser =
-            userRepository.save(user);
-
     try {
 
         emailService.sendOtpEmail(
@@ -59,10 +56,12 @@ public class UserService {
 
     } catch (Exception e) {
 
-        e.printStackTrace();
+        throw new RuntimeException(
+                "Failed to send OTP email"
+        );
     }
 
-    return savedUser;
+    return userRepository.save(user);
 }
 
     public Map<String, Object> loginUser(
