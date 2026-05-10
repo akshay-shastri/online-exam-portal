@@ -22,8 +22,7 @@ public class CorsConfig {
                                 "https://online-exam-portal-rho-ten.vercel.app"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowedHeaders("*");
             }
         };
     }
