@@ -27,7 +27,7 @@ function ExamPage() {
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [warning, setWarning] = useState("");
     const [flashWarning, setFlashWarning] = useState(false);
-    const [cameraEnabled, setCameraEnabled] = useState(true);
+    const [cameraEnabled, setCameraEnabled] = useState(false);
     const [examStarted, setExamStarted] = useState(false);
     const [fullscreenExited, setFullscreenExited] = useState(false);
     const [bookmarkedQuestions, setBookmarkedQuestions] = useState([]);
@@ -122,11 +122,22 @@ function ExamPage() {
         const studentName = localStorage.getItem("name") || "Unknown";
         const email = localStorage.getItem("email");
         const examTitle = qs.length > 0 && qs[0].exam ? qs[0].exam.title : `Exam ${examId}`;
-        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        const endImage = captureFaceSnapshot();
-        setEndFaceImage(endImage);
-        endFaceImageRef.current = endImage;
+        console.log("Capturing END snapshot...");
+
+const endImage = captureFaceSnapshot();
+
+console.log(
+    "END snapshot captured:",
+    !!endImage
+);
+
+if (endImage) {
+
+    setEndFaceImage(endImage);
+
+    endFaceImageRef.current = endImage;
+}
 
         try {
             await API.post("/results", { studentName, email, examTitle, score: finalScore, totalQuestions, percentage, startFaceImage: startFaceImageRef.current, endFaceImage: endFaceImageRef.current });
@@ -142,6 +153,20 @@ function ExamPage() {
         if (streamRef.current) {
             streamRef.current.getTracks().forEach((t) => t.stop());
         }
+
+        // STOP FACE DETECTION
+        if (faceIntervalRef.current) {
+            clearInterval(faceIntervalRef.current);
+            faceIntervalRef.current = null;
+        }
+
+        // STOP CAMERA
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((t) => t.stop());
+            streamRef.current = null;
+        }
+
+        setCameraEnabled(false);
 
         navigate("/result", {
             state: {
@@ -210,6 +235,8 @@ const handleViolation = useCallback((reason) => {
             "Exam auto-submitted due to multiple violations."
         );
 
+        setCameraEnabled(false);
+
         submitExam();
     }
 
@@ -239,7 +266,12 @@ const handleViolation = useCallback((reason) => {
 
   useEffect(() => {
 
-    if (!examStarted) return;
+    if (
+    !examStarted ||
+    alreadyAttempted ||
+    submitted ||
+    submittedRef.current
+) return;
 
     let mounted = true;
 
@@ -274,15 +306,22 @@ const handleViolation = useCallback((reason) => {
     };
 
 }, [examStarted, handleViolation]);
-
-
 // ── Fullscreen monitoring ──
 useEffect(() => {
+
+    // DO NOT MONITOR BEFORE EXAM STARTS
+    if (
+        !examStarted ||
+        alreadyAttempted ||
+        submitted ||
+        submittedRef.current
+    ) {
+        return;
+    }
 
     const handleFullscreenChange = () => {
 
         if (
-            examStarted &&
             !document.fullscreenElement &&
             !submittedRef.current
         ) {
@@ -308,10 +347,25 @@ useEffect(() => {
         );
     };
 
-}, [examStarted, handleViolation]);
-
+}, [
+    examStarted,
+    alreadyAttempted,
+    submitted,
+    handleViolation
+]);
 // DEVTOOLS
 useEffect(() => {
+
+    // DO NOT RUN MONITORING
+    // before exam starts or after submit
+    if (
+        !examStarted ||
+        alreadyAttempted ||
+        submitted ||
+        submittedRef.current
+    ) {
+        return;
+    }
 
     const handleKeyDown = (e) => {
 
@@ -361,10 +415,16 @@ useEffect(() => {
             return;
         }
 
-        if (e.ctrlKey && key === "c") {
+        if (
+            e.ctrlKey &&
+            key === "c"
+        ) {
 
             e.preventDefault();
-            handleViolation("Copy shortcut detected");
+
+            handleViolation(
+                "Copy shortcut detected"
+            );
 
             return;
         }
@@ -381,6 +441,14 @@ useEffect(() => {
 
     const detectDevTools =
         setInterval(() => {
+
+            // STOP CHECKING AFTER SUBMIT
+            if (
+                submittedRef.current ||
+                alreadyAttempted
+            ) {
+                return;
+            }
 
             const widthThreshold =
                 window.outerWidth -
@@ -427,12 +495,25 @@ useEffect(() => {
         );
     };
 
-}, [handleViolation]);
+}, [
+    examStarted,
+    alreadyAttempted,
+    submitted,
+    handleViolation
+]);
 
     // ── Camera startup + track monitoring ──
 
     useEffect(() => {
-        if ( alreadyAttempted || submitted) return;
+
+    // ONLY RUN CAMERA AFTER EXAM STARTS
+    if (
+        alreadyAttempted ||
+        submitted ||
+        submittedRef.current
+    ) {
+        return;
+    }
 
         let cancelled = false;
 
@@ -440,12 +521,26 @@ useEffect(() => {
 
     try {
 
+        console.log("[CAMERA] Starting camera initialization...");
+
+        // PREVENT DOUBLE INITIALIZATION
+        if (streamRef.current) {
+            console.log("[CAMERA] Stream already exists, skipping initialization");
+            setCameraEnabled(true);
+            return;
+        }
+
         await faceapi
             .nets
             .tinyFaceDetector
             .loadFromUri("/models");
 
-        if (cancelled) return;
+        console.log("[CAMERA] Face detection model loaded");
+
+        if (cancelled) {
+            console.log("[CAMERA] Initialization cancelled");
+            return;
+        }
 
         const stream =
             await navigator
@@ -454,104 +549,171 @@ useEffect(() => {
                     video: true
                 });
 
+        console.log("[CAMERA] Stream acquired:", stream);
+        console.log("[CAMERA] Video tracks:", stream.getVideoTracks());
+
         if (cancelled) {
+            console.log("[CAMERA] Cancellation detected after stream acquired, stopping tracks");
             stream.getTracks().forEach((t) => t.stop());
             return;
         }
 
+        // STORE STREAM REFERENCE
         streamRef.current = stream;
 
-        if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            // Try to ensure playback before starting face detection.
-            try { videoRef.current.play().catch(() => {}); } catch (e) {}
+        // ATTACH STREAM TO VIDEO ELEMENT
+      if (videoRef.current) {
 
-            if (videoRef.current.readyState < 2) {
-                await new Promise((resolve) => {
-                    videoRef.current.onloadedmetadata = () => resolve();
-                });
-            }
-        }
+    const video = videoRef.current;
+
+    console.log("[CAMERA] attaching stream");
+
+    video.srcObject = stream;
+
+    try {
+
+        await video.play();
+
+        console.log("[CAMERA] PLAY SUCCESS");
 
         setCameraEnabled(true);
 
-        // clear any existing interval before creating a new one
+    } catch (err) {
+
+        console.error(
+            "[CAMERA] PLAY FAILED",
+            err
+        );
+
+        setCameraEnabled(false);
+    }
+}
+
+        // MONITOR VIDEO TRACKS FOR DISCONNECTION
+        stream.getVideoTracks().forEach((track) => {
+            console.log("[CAMERA] Setting up track event listeners");
+            
+            track.addEventListener("ended", () => {
+                console.log("[CAMERA] Track ended event fired");
+                setCameraEnabled(false);
+                triggerFlashWarning();
+                playWarningSound();
+                setWarning("Warning: Camera disconnected. Exam auto-submitted.");
+                toast.error("Camera disconnected. Exam auto-submitted.");
+                submitExam();
+            });
+
+            track.addEventListener("mute", () => {
+                console.log("[CAMERA] Track mute event fired");
+                setCameraEnabled(false);
+                triggerFlashWarning();
+                playWarningSound();
+                setWarning("Warning: Camera disabled. Exam auto-submitted.");
+                toast.error("Camera disabled. Exam auto-submitted.");
+                submitExam();
+            });
+        });
+
+        // START FACE DETECTION INTERVAL (ONLY AFTER STREAM IS ATTACHED)
         if (faceIntervalRef.current) {
             clearInterval(faceIntervalRef.current);
             faceIntervalRef.current = null;
         }
 
+        console.log("[CAMERA] Starting face detection interval");
+
         faceIntervalRef.current = setInterval(async () => {
+            if (!examStarted) return;
             if (cancelled || !videoRef.current || submittedRef.current) return;
-            if (videoRef.current.readyState < 2) return;
+            
+            const video = videoRef.current;
+            if (video.readyState < 2) {
+                console.log("[FACE-DETECTION] Video not ready, skipping detection");
+                return;
+            }
 
             try {
                 const detections = await faceapi.detectAllFaces(
-                    videoRef.current,
+                    video,
                     new faceapi.TinyFaceDetectorOptions()
                 );
 
-                console.log("Face detections:", detections);
+                console.log("[FACE-DETECTION] Detections found:", detections.length);
 
-                if (
-    detections.length === 0) {
-
-    handleViolation(
-        "No face detected"
-    );
-} else if (detections.length > 1) {
+                if (detections.length === 0) {
+                    console.log("[FACE-DETECTION] No face detected - triggering violation");
+                    handleViolation("No face detected");
+                } else if (detections.length > 1) {
+                    console.log("[FACE-DETECTION] Multiple faces detected - triggering violation");
                     handleViolation("Multiple faces detected");
                 }
             } catch (err) {
-                console.error("Face detection error:", err);
+                console.error("[FACE-DETECTION] Face detection error:", err);
             }
         }, 2500);
 
-                // Monitor each video track for disable/disconnect
-                stream.getVideoTracks().forEach((track) => {
-                    track.addEventListener("ended", () => {
-                        setCameraEnabled(false);
-                        triggerFlashWarning();
-                        playWarningSound();
-                        setWarning("Warning: Camera disconnected. Exam auto-submitted.");
-                        toast.error("Camera disconnected. Exam auto-submitted.");
-                        submitExam();
-                    });
+        console.log("[CAMERA] Camera initialization complete");
 
-                    track.addEventListener("mute", () => {
-                        setCameraEnabled(false);
-                        triggerFlashWarning();
-                        playWarningSound();
-                        setWarning("Warning: Camera disabled. Exam auto-submitted.");
-                        toast.error("Camera disabled. Exam auto-submitted.");
-                        submitExam();
-                    });
-                });
+    } catch (error) {
+        if (cancelled) {
+            console.log("[CAMERA] Error caught but initialization was cancelled");
+            return;
+        }
+        console.error("[CAMERA] Camera initialization error:", error);
+        setCameraEnabled(false);
+        triggerFlashWarning();
+        playWarningSound();
+        setWarning("Warning: Camera access is required during exam.");
+        toast.error("Camera access denied.");
+    }
+};
 
-            } catch (error) {
-                if (cancelled) return;
-                console.error("Camera/Object Detection Error:", error);
-                setCameraEnabled(false);
-                triggerFlashWarning();
-                playWarningSound();
-                setWarning("Warning: Camera access is required during exam.");
-                toast.error("Camera access denied.");
-            }
-        };
+startCamera();
 
-        startCamera();
+return () => {
 
-        return () => {
-            cancelled = true;
-            if (faceIntervalRef.current) {
-                clearInterval(faceIntervalRef.current);
-                faceIntervalRef.current = null;
-            }
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach((t) => t.stop());
-            }
-        };
-    }, [examStarted, triggerFlashWarning, playWarningSound, submitExam]);
+    console.log("[CAMERA-CLEANUP] Component cleanup started");
+    cancelled = true;
+
+    // stop face detection interval
+    if (faceIntervalRef.current) {
+        console.log("[CAMERA-CLEANUP] Clearing face detection interval");
+        clearInterval(faceIntervalRef.current);
+        faceIntervalRef.current = null;
+    }
+
+    // stop webcam stream
+    if (streamRef.current) {
+        console.log("[CAMERA-CLEANUP] Stopping video tracks");
+        streamRef.current
+            .getTracks()
+            .forEach((track) => {
+                console.log("[CAMERA-CLEANUP] Stopping track:", track.kind);
+                track.stop();
+            });
+        streamRef.current = null;
+    }
+
+    // Clear video source
+    if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.onloadedmetadata = null;
+    }
+
+    // hide camera UI
+    setCameraEnabled(false);
+    console.log("[CAMERA-CLEANUP] Cleanup complete");
+};
+
+}, [
+    examStarted,
+    alreadyAttempted,
+    submitted,
+    triggerFlashWarning,
+    playWarningSound,
+    submitExam,
+    handleViolation
+]);
 
  const fetchQuestions = async () => {
 
@@ -690,8 +852,18 @@ const enterFullscreen = async () => {
 
 const captureFaceSnapshot = () => {
 
-    if (!videoRef.current)
+    const video = videoRef.current;
+
+    // SAFETY CHECKS
+    if (!video) {
+        console.log("No video ref available");
         return null;
+    }
+
+    if (video.readyState < 2) {
+        console.log("Video not ready yet");
+        return null;
+    }
 
     const canvas =
         document.createElement(
@@ -699,25 +871,33 @@ const captureFaceSnapshot = () => {
         );
 
     canvas.width =
-        videoRef.current.videoWidth;
+        video.videoWidth;
 
     canvas.height =
-        videoRef.current.videoHeight;
+        video.videoHeight;
 
     const ctx =
         canvas.getContext("2d");
 
     ctx.drawImage(
-        videoRef.current,
+        video,
         0,
         0,
         canvas.width,
         canvas.height
     );
 
-    return canvas.toDataURL(
-        "image/jpeg"
+    const image =
+        canvas.toDataURL(
+            "image/jpeg"
+        );
+
+    console.log(
+        "Snapshot captured:",
+        !!image
     );
+
+    return image;
 };
 
 
@@ -818,14 +998,22 @@ const reEnterFullscreen = async () => {
     }}>
 
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold text-blue-600">Smart Exam Portal</h1>
-                        <p className="text-xs text-gray-400">Examination in Progress</p>
+            <div className="sticky top-0 z-50" style={{background:'rgba(12,10,30,0.88)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderBottom:'1px solid rgba(168,85,247,0.12)'}}>
+                <div className="max-w-5xl mx-auto px-6 py-3.5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:'linear-gradient(135deg,#6d28d9,#a21caf)',boxShadow:'0 0 16px rgba(109,40,217,0.45)'}}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" />
+                                <path d="M9 12l2 2 4-4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold" style={{background:'linear-gradient(90deg,#f3e8ff,#c4b5fd)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Smart Exam Portal</p>
+                            <p className="text-xs" style={{color:'rgba(196,181,253,0.5)'}}>Examination in Progress</p>
+                        </div>
                     </div>
                     {!alreadyAttempted && (
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-2 rounded-xl font-bold shadow-md">
+                        <div className="px-5 py-2 rounded-xl font-bold text-sm" style={{background:'linear-gradient(135deg,#7c3aed,#a855f7)',boxShadow:'0 2px 16px rgba(124,58,237,0.4)',color:'white'}}>
                             {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
                         </div>
                     )}
@@ -839,17 +1027,17 @@ const reEnterFullscreen = async () => {
                     style={{ width: `${timerPercentage}%` }}
                 />
             </div>
-
-            {/* Camera preview */}
-            {cameraEnabled && (
-                <div className="fixed top-4 right-4 z-50">
+{/* Camera preview */}
+{!alreadyAttempted && !submitted && (
+    <div className="fixed top-4 right-4 z-50">
                     <div className="bg-black rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-                        <video
-                            ref={videoRef}
-                            autoPlay
-                            muted
-                            className="w-52 h-40 object-cover"
-                        />
+                       <video
+    ref={videoRef}
+    autoPlay
+    muted
+    playsInline
+    className="w-52 h-40 object-cover bg-black"
+/>
                         <div className={`text-center text-xs font-bold py-1 ${cameraEnabled ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
                             {cameraEnabled ? "Camera Active" : "Camera Off"}
                         </div>
@@ -970,7 +1158,7 @@ const reEnterFullscreen = async () => {
                     );
                 }
             }}
-            className="w-full mb-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-4 rounded-2xl text-lg font-bold shadow-lg"
+            className="premium-btn-primary w-full mb-4 py-4 text-lg"
         >
             Capture Verification Photo
         </button>
@@ -1025,7 +1213,7 @@ const reEnterFullscreen = async () => {
 
     startExam();
 }}
-                            className="w-full mt-8 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-4 rounded-2xl text-lg font-bold shadow-lg"
+                            className="premium-btn-primary w-full mt-8 py-4 text-lg"
                         >
                             Start Exam
                         </button>
@@ -1127,9 +1315,8 @@ className={`w-11 h-11 rounded-xl text-sm font-bold transition-all duration-200 $
                                                 }
                                                 handleOptionSelect(currentQuestion.id, optionLabels[i]);
                                             }}
-                                            className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 ${isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-100 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"}`}
-                                        >
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${isSelected ? "bg-blue-500 text-white" : "bg-white border"}`}>
+                                            className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 ${ isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-800 hover:border-blue-300 hover:bg-blue-50"}`}>
+                                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${ isSelected ? "bg-blue-500 text-white" : "bg-gray-100 border border-gray-300 text-gray-700"}`}>
                                                 {optionLabels[i]}
                                             </div>
                                             <span className="font-medium">{option}</span>
@@ -1151,7 +1338,7 @@ className={`w-11 h-11 rounded-xl text-sm font-bold transition-all duration-200 $
                                 {currentQuestionIndex === questions.length - 1 ? (
                                     <button
                                         onClick={() => setShowSubmitConfirm(true)}
-                                        className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-md"
+                                        className="premium-btn-primary px-8 py-3 text-sm font-bold"
                                     >
                                         Submit Exam
                                     </button>
@@ -1163,7 +1350,7 @@ className={`w-11 h-11 rounded-xl text-sm font-bold transition-all duration-200 $
                                             }
                                             setCurrentQuestionIndex(currentQuestionIndex + 1);
                                         }}
-                                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold shadow-md"
+                                        className="premium-btn-primary px-6 py-3 text-sm font-semibold"
                                     >
                                         Next
                                     </button>
@@ -1187,7 +1374,7 @@ className={`w-11 h-11 rounded-xl text-sm font-bold transition-all duration-200 $
                         : "Are you sure you want to submit?"
                 }
                 confirmLabel="Submit"
-                confirmClass="bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                confirmClass="premium-btn-primary"
                 onConfirm={submitExam}
                 onCancel={() => setShowSubmitConfirm(false)}
             />

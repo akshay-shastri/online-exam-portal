@@ -1,6 +1,6 @@
 package com.examportal.backend.service;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -11,15 +11,19 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     public void sendOtpEmail(
             String toEmail,
             String otp
     ) {
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
+        SimpleMailMessage message = new SimpleMailMessage();
 
         message.setTo(toEmail);
+
+        message.setFrom("akshayshastri2474@gmail.com");
 
         message.setSubject(
                 "Smart Exam Portal - Email Verification"
@@ -51,6 +55,8 @@ public class EmailService {
                 new SimpleMailMessage();
 
         message.setTo(toEmail);
+
+        message.setFrom("akshayshastri2474@gmail.com");
 
         message.setSubject(
                 "Exam Result - " + examTitle
@@ -88,6 +94,8 @@ public class EmailService {
 
         message.setTo(toEmail);
 
+        message.setFrom("akshayshastri2474@gmail.com");
+
         message.setSubject(
                 "Upcoming Exam Reminder"
         );
@@ -123,6 +131,8 @@ public class EmailService {
                 new SimpleMailMessage();
 
         message.setTo(toEmail);
+
+        message.setFrom("akshayshastri2474@gmail.com");
 
         message.setSubject(
                 "Exam Scheduled Successfully"

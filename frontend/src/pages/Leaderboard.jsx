@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import "../styles/dashboard.css";
 
 function Leaderboard() {
 
@@ -38,73 +39,90 @@ function Leaderboard() {
     const remainingLeaders = leaders.slice(3);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 px-4 sm:px-6 py-8">
+        <div className="premium-root min-h-screen">
+            <div className="ambient-blob blob-a" />
+            <div className="ambient-blob blob-b" />
 
-            <div className="max-w-4xl mx-auto">
+            {/* Navbar */}
+            <nav className="premium-navbar mx-6 md:mx-12">
+                <div className="navbar-logo">
+                    <div className="logo-mark">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" />
+                            <path d="M9 12l2 2 4-4" />
+                        </svg>
+                    </div>
+                    <div className="logo-text-primary">Smart Exam Portal</div>
+                </div>
+                <button onClick={() => navigate("/student-dashboard")} className="lb-nav-back">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Dashboard
+                </button>
+            </nav>
 
-                {/* Header */}
-                <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl px-8 py-10 text-white shadow-2xl shadow-blue-900/30 mb-10 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400/10 rounded-full translate-y-1/2 -translate-x-1/4 blur-2xl pointer-events-none" />
-                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="px-6 md:px-12 py-10 max-w-4xl mx-auto">
+
+                {/* ── Hero ── */}
+                <div className="lb-hero mb-10">
+                    <div className="lb-hero-glow-tr" />
+                    <div className="lb-hero-glow-bl" />
+                    <div className="lb-hero-inner">
                         <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-2xl">🏆</span>
-                                <span className="text-blue-200 text-xs font-bold uppercase tracking-widest">Rankings</span>
+                            <div className="lb-hero-eyebrow">
+                                <span className="lb-trophy-icon">🏆</span>
+                                <span className="hero-accent">Rankings</span>
                             </div>
-                            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-1">Student Leaderboard</h1>
-                            <p className="text-blue-200 text-sm font-medium">Top performers across all examinations</p>
+                            <h1 className="lb-hero-title">Student Leaderboard</h1>
+                            <p className="lb-hero-sub">Top performers across all examinations</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-center border border-white/20 shrink-0">
-                            <p className="text-3xl font-black">{leaders.length}</p>
-                            <p className="text-blue-200 text-xs font-semibold mt-0.5">Students Ranked</p>
+                        <div className="lb-hero-counter">
+                            <p className="lb-hero-counter-num">{leaders.length}</p>
+                            <p className="lb-hero-counter-label">Students Ranked</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Loading */}
+                {/* ── Loading ── */}
                 {loading && (
-                    <div className="flex flex-col items-center justify-center py-24">
-                        <div className="relative w-16 h-16 mb-5">
-                            <div className="w-16 h-16 rounded-full border-4 border-blue-100 dark:border-blue-900" />
-                            <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-t-blue-500 animate-spin" />
-                        </div>
-                        <p className="text-gray-500 dark:text-gray-400 font-medium">Loading leaderboard...</p>
+                    <div className="lb-loading">
+                        <div className="lb-spinner" />
+                        <p className="lb-loading-text">Loading leaderboard...</p>
                     </div>
                 )}
 
-                {/* Podium — Top 3 */}
+                {/* ── Podium — Top 3 ── */}
                 {!loading && topThree.length > 0 && (
                     <div className="mb-10">
-                        <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-6 text-center">Top Performers</h2>
+                        <p className="lb-section-label">Top Performers</p>
 
-                        {/* Podium visual */}
-                        <div className="flex items-end justify-center gap-4 mb-6">
+                        <div className="lb-podium-row">
                             {[1, 0, 2].map((leaderIdx) => {
                                 const leader = topThree[leaderIdx];
                                 if (!leader) return null;
                                 const cfg = podiumConfig[leaderIdx];
                                 const isFirst = leaderIdx === 0;
                                 return (
-                                    <div key={leaderIdx} className="flex flex-col items-center gap-3" style={{ order: cfg.order }}>
+                                    <div key={leaderIdx} className={`lb-podium-col ${isFirst ? "lb-podium-col-first" : ""}`} style={{ order: cfg.order }}>
                                         {/* Avatar */}
-                                        <div className={`relative ${isFirst ? "scale-110" : ""} transition-transform`}>
-                                            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cfg.bg} text-white flex items-center justify-center text-2xl font-black shadow-xl ${cfg.shadow} ring-4 ${cfg.ring} ring-offset-2 ring-offset-white dark:ring-offset-gray-950`}>
+                                        <div className="lb-avatar-wrap">
+                                            <div className={`lb-avatar lb-avatar-gradient-${leaderIdx} ${isFirst ? "lb-avatar-lg" : ""}`}>
                                                 {leader.studentName.charAt(0).toUpperCase()}
                                             </div>
-                                            <div className="absolute -top-3 -right-2 text-xl">{getMedal(leaderIdx)}</div>
+                                            <span className="lb-medal">{getMedal(leaderIdx)}</span>
                                         </div>
                                         {/* Name */}
-                                        <div className="text-center">
-                                            <p className={`font-bold text-gray-800 dark:text-gray-100 ${isFirst ? "text-base" : "text-sm"} max-w-[90px] truncate`}>{leader.studentName}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{leader.attempts} attempts</p>
+                                        <div className="lb-podium-name-wrap">
+                                            <p className={`lb-podium-name ${isFirst ? "lb-podium-name-lg" : ""}`}>{leader.studentName}</p>
+                                            <p className="lb-podium-attempts">{leader.attempts} attempts</p>
                                         </div>
-                                        {/* Score */}
-                                        <div className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${cfg.bg} text-white text-sm font-black shadow-md`}>
+                                        {/* Score pill */}
+                                        <div className={`lb-score-pill lb-score-pill-${leaderIdx}`}>
                                             {leader.averageScore}
                                         </div>
                                         {/* Podium block */}
-                                        <div className={`w-24 ${cfg.height} bg-gradient-to-b ${cfg.bg} rounded-t-2xl opacity-30 dark:opacity-20`} />
+                                        <div className={`lb-podium-block lb-podium-block-${leaderIdx} ${cfg.height}`} />
                                     </div>
                                 );
                             })}
@@ -112,53 +130,46 @@ function Leaderboard() {
                     </div>
                 )}
 
-                {/* Remaining table */}
+                {/* ── Full Rankings Table ── */}
                 {!loading && remainingLeaders.length > 0 && (
-                    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-blue-900/5 dark:shadow-black/30 border border-white/60 dark:border-gray-700/60 overflow-hidden mb-8">
-
-                        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <div className="lb-table-card mb-8">
+                        <div className="lb-table-header">
                             <div>
-                                <h3 className="font-bold text-gray-800 dark:text-gray-100">Full Rankings</h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Positions 4 and beyond</p>
+                                <h3 className="lb-table-title">Full Rankings</h3>
+                                <p className="lb-table-sub">Positions 4 and beyond</p>
                             </div>
-                            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold px-3 py-1 rounded-full">
-                                {remainingLeaders.length} students
-                            </span>
+                            <span className="lb-count-badge">{remainingLeaders.length} students</span>
                         </div>
 
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="bg-gray-50/80 dark:bg-gray-800/50">
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rank</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Attempts</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Score</th>
+                                    <tr className="lb-thead-row">
+                                        <th className="lb-th">Rank</th>
+                                        <th className="lb-th">Student</th>
+                                        <th className="lb-th">Attempts</th>
+                                        <th className="lb-th">Avg Score</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tbody>
                                     {remainingLeaders.map((leader, index) => (
-                                        <tr key={index} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <span className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-bold flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-                                                    {index + 4}
-                                                </span>
+                                        <tr key={index} className="lb-tr">
+                                            <td className="lb-td">
+                                                <span className="lb-rank-badge">{index + 4}</span>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                                            <td className="lb-td">
+                                                <div className="lb-student-cell">
+                                                    <div className="lb-student-avatar">
                                                         {leader.studentName.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{leader.studentName}</span>
+                                                    <span className="lb-student-name">{leader.studentName}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{leader.attempts}</span>
+                                            <td className="lb-td">
+                                                <span className="lb-attempts-val">{leader.attempts}</span>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-bold">
-                                                    {leader.averageScore}
-                                                </span>
+                                            <td className="lb-td">
+                                                <span className="lb-score-badge">{leader.averageScore}</span>
                                             </td>
                                         </tr>
                                     ))}
@@ -168,25 +179,22 @@ function Leaderboard() {
                     </div>
                 )}
 
-                {/* Empty state */}
+                {/* ── Empty state ── */}
                 {!loading && leaders.length === 0 && (
-                    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl border border-dashed border-blue-200 dark:border-blue-800/50 p-16 text-center shadow-sm">
-                        <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/30 rounded-3xl flex items-center justify-center mx-auto mb-5">
-                            <span className="text-4xl">🏆</span>
+                    <div className="lb-empty-card">
+                        <div className="lb-empty-icon-wrap">
+                            <span className="lb-empty-trophy">🏆</span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">No Rankings Yet</h3>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto leading-relaxed">
+                        <h3 className="lb-empty-title">No Rankings Yet</h3>
+                        <p className="lb-empty-sub">
                             Complete exams to appear on the leaderboard and compete with other students.
                         </p>
                     </div>
                 )}
 
-                {/* Back button */}
-                <button
-                    onClick={() => navigate("/student-dashboard")}
-                    className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mt-2"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* ── Back button ── */}
+                <button onClick={() => navigate("/student-dashboard")} className="lb-btn-back">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                     Back to Dashboard

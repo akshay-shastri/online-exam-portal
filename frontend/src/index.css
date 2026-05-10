@@ -1,3 +1,96 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	:root {
+		color-scheme: dark;
+	}
+
+	html,
+	body,
+	#root {
+		min-height: 100%;
+	}
+
+	body {
+		margin: 0;
+		background:
+			radial-gradient(circle at top, rgba(91, 33, 182, 0.18), transparent 34%),
+			linear-gradient(180deg, #050816 0%, #070b1d 100%);
+		color: #f8fafc;
+	}
+
+	.dark .bg-white,
+	.dark .bg-white\/80,
+	.dark .bg-white\/70,
+	.dark .bg-white\/60,
+	.dark .bg-white\/50,
+	.dark .bg-white\/40,
+	.dark .bg-white\/10,
+	.dark .bg-gray-50,
+	.dark .bg-gray-100,
+	.dark .bg-gray-200,
+	.dark .bg-blue-50,
+	.dark .bg-indigo-50,
+	.dark .bg-violet-50,
+	.dark .bg-emerald-50,
+	.dark .bg-red-50,
+	.dark .bg-amber-50,
+	.dark .bg-yellow-50 {
+		background-color: #0e1326 !important;
+	}
+
+	.dark .border-gray-100,
+	.dark .border-gray-200,
+	.dark .border-blue-100,
+	.dark .border-indigo-100,
+	.dark .border-violet-100,
+	.dark .border-emerald-100,
+	.dark .border-red-100,
+	.dark .border-amber-100,
+	.dark .border-yellow-100 {
+		border-color: rgba(148, 163, 184, 0.16) !important;
+	}
+
+	.dark .text-gray-700,
+	.dark .text-gray-600,
+	.dark .text-gray-500,
+	.dark .text-gray-400,
+	.dark .text-gray-300,
+	.dark .text-gray-200 {
+		color: #cbd5e1 !important;
+	}
+
+	.dark [style*="rgba(255,255,255"],
+	.dark [style*="rgb(255,255,255"] {
+		background: #0e1326 !important;
+		border-color: rgba(148, 163, 184, 0.16) !important;
+	}
+
+	.dark [class*="bg-white"],
+	.dark [class*="bg-gray-50"],
+	.dark [class*="bg-gray-100"],
+	.dark [class*="bg-gray-200"],
+	.dark [class*="bg-blue-50"],
+	.dark [class*="bg-indigo-50"],
+	.dark [class*="bg-violet-50"],
+	.dark [class*="bg-emerald-50"],
+	.dark [class*="bg-red-50"],
+	.dark [class*="bg-amber-50"],
+	.dark [class*="bg-yellow-50"] {
+		background-color: #0e1326 !important;
+	}
+
+	.dark [class*="border-gray-100"],
+	.dark [class*="border-gray-200"],
+	.dark [class*="border-blue-100"],
+	.dark [class*="border-indigo-100"],
+	.dark [class*="border-violet-100"],
+	.dark [class*="border-emerald-100"],
+	.dark [class*="border-red-100"],
+	.dark [class*="border-amber-100"],
+	.dark [class*="border-yellow-100"] {
+		border-color: rgba(148, 163, 184, 0.16) !important;
+	}
+}
