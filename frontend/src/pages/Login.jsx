@@ -39,11 +39,15 @@ function Login() {
                 toast.error(response.data.message || "Login failed.");
             }
         } catch (error) {
-            console.log(error);
-            toast.error("Login failed. Please check your credentials.");
-        } finally {
-            setLoading(false);
-        }
+
+    console.log("LOGIN ERROR:", error);
+
+    toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Login failed."
+    );
+}
     };
 
     return (
