@@ -49,18 +49,19 @@ public class UserService {
 
     try {
 
-        emailService.sendOtpEmail(
-                user.getEmail(),
-                otp
-        );
+    emailService.sendOtpEmail(
+            user.getEmail(),
+            otp
+    );
 
-    } catch (Exception e) {
+} catch (Exception e) {
 
-        e.printStackTrace();
-        throw new RuntimeException("Failed to send OTP email");
-    }
+    e.printStackTrace();
 
-    return userRepository.save(user);
+    System.out.println("OTP email failed but user registered.");
+}
+
+return userRepository.save(user);
 }
 
     public Map<String, Object> loginUser(
@@ -221,18 +222,27 @@ public String resendOtp(String email) {
 
     user.setOtp(otp);
 
-    user.setOtpGeneratedTime(
-            System.currentTimeMillis()
-    );
+user.setOtpGeneratedTime(
+        System.currentTimeMillis()
+);
 
-    userRepository.save(user);
+userRepository.save(user);
+
+try {
 
     emailService.sendOtpEmail(
             user.getEmail(),
             otp
     );
 
-    return "OTP Resent Successfully";
+} catch (Exception e) {
+
+    e.printStackTrace();
+
+    System.out.println("Failed to resend OTP email");
+}
+
+return "OTP Resent Successfully";
 }
 
 
