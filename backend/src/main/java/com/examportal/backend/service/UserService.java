@@ -47,22 +47,27 @@ public class UserService {
             System.currentTimeMillis()
     );
 
+    User savedUser =
+            userRepository.save(user);
+
     try {
 
-    emailService.sendOtpEmail(
-            user.getEmail(),
-            otp
-    );
+        emailService.sendOtpEmail(
+                user.getEmail(),
+                otp
+        );
 
-} catch (Exception e) {
+    } catch (Exception e) {
 
-    e.printStackTrace();
+        e.printStackTrace();
 
-    System.out.println("OTP email failed but user registered.");
+        System.out.println("OTP email failed but user registered.");
+    }
+
+    return savedUser;
 }
 
-return userRepository.save(user);
-}
+
 
     public Map<String, Object> loginUser(
             String email,
