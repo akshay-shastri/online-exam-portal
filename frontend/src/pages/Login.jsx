@@ -24,7 +24,7 @@ function Login() {
         if (loading) return;
         setLoading(true);
         try {
-            const response = await API.post("/auth/login", { email: email.trim().toLowerCase(), password: password.trim()});
+            const response = await API.post("/auth/login", { email, password });
             if (response.data.message === "Login Successful") {
                 toast.success("Login successful! Welcome back.");
                 localStorage.setItem("role", response.data.role);
@@ -39,16 +39,11 @@ function Login() {
                 toast.error(response.data.message || "Login failed.");
             }
         } catch (error) {
-
-    console.log(error);
-    console.log(error.response);
-
-    toast.error(
-        error.response?.data ||
-        error.message ||
-        "Login failed."
-    );
-}
+            console.log(error);
+            toast.error("Login failed. Please check your credentials.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
