@@ -1,41 +1,105 @@
 package com.examportal.backend.service;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${BREVO_API_KEY}")
+    private String apiKey;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    private void sendEmail(
+            String toEmail,
+            String subject,
+            String content
+    ) {
+
+        try {
+
+            URL url =
+                    new URL("https://api.brevo.com/v3/smtp/email");
+
+            HttpURLConnection conn =
+                    (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("POST");
+
+            conn.setRequestProperty(
+                    "accept",
+                    "application/json"
+            );
+
+            conn.setRequestProperty(
+                    "api-key",
+                    apiKey
+            );
+
+            conn.setRequestProperty(
+                    "content-type",
+                    "application/json"
+            );
+
+            conn.setDoOutput(true);
+
+            String body = """
+            {
+              "sender":{
+                "name":"Smart Exam Portal",
+                "email":"akshayshastri2474@gmail.com"
+              },
+              "to":[{"email":"%s"}],
+              "subject":"%s",
+              "htmlContent":"%s"
+            }
+            """.formatted(
+                    toEmail,
+                    subject,
+                    content.replace("\"", "\\\"")
+            );
+
+            try (OutputStream os = conn.getOutputStream()) {
+
+                byte[] input =
+                        body.getBytes("utf-8");
+
+                os.write(
+                        input,
+                        0,
+                        input.length
+                );
+            }
+
+            int responseCode =
+                    conn.getResponseCode();
+
+            System.out.println(
+                    "Brevo API Response: "
+                            + responseCode
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+    }
 
     public void sendOtpEmail(
             String toEmail,
             String otp
     ) {
 
-        SimpleMailMessage message = new SimpleMailMessage();
-
-        message.setTo(toEmail);
-
-        message.setFrom("akshayshastri2474@gmail.com");
-
-        message.setSubject(
-                "Smart Exam Portal - Email Verification"
-        );
-
-        message.setText(
-                "Your OTP for email verification is: "
+        sendEmail(
+                toEmail,
+                "Smart Exam Portal - Email Verification",
+                "<h2>Your OTP is: "
                         + otp
-                        + "\n\nThis OTP will expire in 5 minutes."
+                        + "</h2><p>This OTP will expire in 5 minutes.</p>"
         );
-
-        mailSender.send(message);
     }
 
     public void sendResultEmail(
@@ -51,35 +115,15 @@ public class EmailService {
                         ? "PASSED"
                         : "FAILED";
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
-
-        message.setTo(toEmail);
-
-        message.setFrom("akshayshastri2474@gmail.com");
-
-        message.setSubject(
-                "Exam Result - " + examTitle
+        sendEmail(
+                toEmail,
+                "Exam Result - " + examTitle,
+                "<h2>Hello " + studentName + "</h2>"
+                        + "<p>Exam: " + examTitle + "</p>"
+                        + "<p>Score: " + score + "</p>"
+                        + "<p>Percentage: " + percentage + "%</p>"
+                        + "<p>Status: " + status + "</p>"
         );
-
-        message.setText(
-
-                "Hello " + studentName + ",\n\n"
-
-                        + "Your exam has been completed successfully.\n\n"
-
-                        + "Exam: " + examTitle + "\n"
-
-                        + "Score: " + score + "\n"
-
-                        + "Percentage: " + percentage + "%\n"
-
-                        + "Status: " + status + "\n\n"
-
-                        + "Thank you for using Smart Exam Portal."
-        );
-
-        mailSender.send(message);
     }
 
     public void sendReminderEmail(
@@ -89,35 +133,14 @@ public class EmailService {
             String examTime
     ) {
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
-
-        message.setTo(toEmail);
-
-        message.setFrom("akshayshastri2474@gmail.com");
-
-        message.setSubject(
-                "Upcoming Exam Reminder"
+        sendEmail(
+                toEmail,
+                "Upcoming Exam Reminder",
+                "<h2>Hello " + studentName + "</h2>"
+                        + "<p>Your exam is scheduled soon.</p>"
+                        + "<p>Exam: " + examTitle + "</p>"
+                        + "<p>Start Time: " + examTime + "</p>"
         );
-
-        message.setText(
-
-                "Hello " + studentName + ",\n\n"
-
-                        + "Reminder: Your exam is scheduled soon.\n\n"
-
-                        + "Exam: " + examTitle + "\n"
-
-                        + "Start Time: " + examTime + "\n\n"
-
-                        + "Please be prepared before the exam begins.\n\n"
-
-                        + "Best of luck!\n"
-
-                        + "Smart Exam Portal"
-        );
-
-        mailSender.send(message);
     }
 
     public void sendExamCreatedEmail(
@@ -127,34 +150,13 @@ public class EmailService {
             String examTime
     ) {
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
-
-        message.setTo(toEmail);
-
-        message.setFrom("akshayshastri2474@gmail.com");
-
-        message.setSubject(
-                "Exam Scheduled Successfully"
+        sendEmail(
+                toEmail,
+                "Exam Scheduled Successfully",
+                "<h2>Hello " + studentName + "</h2>"
+                        + "<p>A new exam has been scheduled.</p>"
+                        + "<p>Exam: " + examTitle + "</p>"
+                        + "<p>Start Time: " + examTime + "</p>"
         );
-
-        message.setText(
-
-                "Hello " + studentName + ",\n\n"
-
-                        + "A new exam has been scheduled for you.\n\n"
-
-                        + "Exam: " + examTitle + "\n"
-
-                        + "Start Time: " + examTime + "\n\n"
-
-                        + "Please login to the Smart Exam Portal before the exam starts.\n\n"
-
-                        + "Best of luck!\n"
-
-                        + "Smart Exam Portal"
-        );
-
-        mailSender.send(message);
     }
 }
