@@ -26,7 +26,7 @@ public class AuthController {
             @RequestBody Map<String, String> loginData
     ) {
 
-        String email = loginData.get("email");
+        String email = loginData.get("email").trim().toLowerCase();
         String password = loginData.get("password");
 
         return userService.loginUser(email, password);
@@ -37,7 +37,7 @@ public class AuthController {
             @RequestBody Map<String, String> request
     ) {
 
-        String email = request.get("email");
+        String email = request.get("email").trim().toLowerCase();;
         String currentPassword =
                 request.get("currentPassword");
         String newPassword =
@@ -56,7 +56,7 @@ public class AuthController {
 ) {
 
     return userService.verifyOtp(
-            request.get("email"),
+            request.get("email").trim().toLowerCase(),
             request.get("otp")
     );
 }
@@ -68,8 +68,7 @@ public String resendOtp(
 ) {
 
     return userService.resendOtp(
-            request.get("email")
-    );
+            request.get("email").trim().toLowerCase());
 }
 
 
