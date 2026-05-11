@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/notifications")
-@CrossOrigin("*")
 public class NotificationController {
 
     @Autowired
