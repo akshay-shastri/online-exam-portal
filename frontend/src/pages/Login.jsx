@@ -19,37 +19,66 @@ function Login() {
         if (token && role === "ADMIN") navigate("/admin-dashboard");
         else if (token && role === "STUDENT") navigate("/student-dashboard");
     }, [navigate]);
+const handleLogin = async () => {
 
-    const handleLogin = async () => {
-        if (loading) return;
-        setLoading(true);
-        try {
-            const response = await API.post("/auth/login", { email, password });
-            if (response.data.message === "Login Successful") {
-                toast.success("Login successful! Welcome back.");
-                localStorage.setItem("role", response.data.role);
-                localStorage.setItem("token", response.data.token);
-                localStorage.setItem("name", response.data.name);
-                localStorage.setItem("email", email);
-                if (response.data.role === "ADMIN") navigate("/admin-dashboard");
-                else if (response.data.role === "STUDENT") navigate("/student-dashboard");
-            } else if (response.data.message === "Please verify your email first") {
-                toast.error("Please verify your email before logging in. Check your inbox.", { duration: 5000 });
-            } else {
-                toast.error(response.data.message || "Login failed.");
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+
+        const response = await API.post("/auth/login", {
+            email: email.trim().toLowerCase(),
+            password
+        });
+
+        if (response.data.message === "Login Successful") {
+
+            toast.success("Login successful! Welcome back.");
+
+            localStorage.setItem("role", response.data.role);
+            localStorage.setItem("token", response.data.token);
+            localStorage.setItem("name", response.data.name);
+            localStorage.setItem("email", email);
+
+            if (response.data.role === "ADMIN") {
+                navigate("/admin-dashboard");
+            } else if (response.data.role === "STUDENT") {
+                navigate("/student-dashboard");
             }
-        } catch (error) {
 
-    console.log("LOGIN ERROR:", error);
+        } else if (
+            response.data.message ===
+            "Please verify your email first"
+        ) {
 
-    toast.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Login failed."
-    );
-}
-    };
+            toast.error(
+                "Please verify your email before logging in. Check your inbox.",
+                { duration: 5000 }
+            );
 
+        } else {
+
+            toast.error(
+                response.data.message || "Login failed."
+            );
+        }
+
+    } catch (error) {
+
+        console.log("LOGIN ERROR:", error);
+
+        toast.error(
+            error.response?.data?.message ||
+            error.message ||
+            "Login failed."
+        );
+
+    } finally {
+
+        setLoading(false);
+    }
+};
     return (
         <div className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden bg-[#0b0b0f]">
 
