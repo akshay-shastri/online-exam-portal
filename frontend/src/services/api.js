@@ -2,7 +2,7 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.DEV
     ? "http://localhost:8080"
-    : "https://online-exam-portal-production-3a2f.up.railway.app";
+    : "https://online-exam-portal-5nc0.onrender.com";
 
 const API = axios.create({
     baseURL: BASE_URL,
