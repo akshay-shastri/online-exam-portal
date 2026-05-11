@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/violations")
-@CrossOrigin("*")
 public class ViolationController {
 
     @Autowired
