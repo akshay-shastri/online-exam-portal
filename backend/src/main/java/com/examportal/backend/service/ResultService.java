@@ -49,6 +49,14 @@ return savedResult;
                 .findByStudentNameOrderBySubmittedAtDesc(studentName);
     }
 
+    public List<Result> getResultsByEmail(
+        String email
+   ) {
+
+        return resultRepository
+            .findByEmailOrderBySubmittedAtDesc(email);
+    }
+
     public boolean hasAttempted(
             String studentName,
             String examTitle

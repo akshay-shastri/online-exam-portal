@@ -177,14 +177,14 @@ public List<Result> getAllResults() {
             .getAllResults();
 }
 
-    @GetMapping("/{studentName}")
-    public List<Result> getResultsByStudentName(
-            @PathVariable String studentName
+    @GetMapping("/{email}")
+    public List<Result> getResultsByEmail(
+        @PathVariable String email
     ) {
 
         return resultService
-                .getResultsByStudentName(studentName);
-    }
+            .getResultsByEmail(email);
+      }
 
     
 

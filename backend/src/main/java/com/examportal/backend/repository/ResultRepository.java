@@ -14,6 +14,10 @@ public interface ResultRepository
             String studentName
     );
 
+    List<Result> findByEmailOrderBySubmittedAtDesc(
+        String email
+);
+
     boolean existsByStudentNameAndExamTitle(
             String studentName,
             String examTitle

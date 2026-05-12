@@ -19,6 +19,7 @@ function HistoryPage() {
 
     const navigate = useNavigate();
 
+    const email = localStorage.getItem("email");
     const name = localStorage.getItem("name");
     const firstLetter = name ? name.charAt(0).toUpperCase() : "U";
 
@@ -35,7 +36,7 @@ function HistoryPage() {
         setLoading(true);
         setError(false);
         try {
-            const response = await API.get(`/results/${name}`);
+            const response = await API.get(`/results/${email}`);
             setResults(response.data);
         } catch (error) {
             console.log(error);
