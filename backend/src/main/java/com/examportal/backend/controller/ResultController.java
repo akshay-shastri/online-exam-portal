@@ -170,12 +170,12 @@ leaderboard.sort((a, b) ->
 }
 
 
-@GetMapping
-public List<Result> getAllResults() {
+        @GetMapping
+        public List<Result> getAllResults() {
 
-    return resultService
-            .getAllResults();
-}
+        return resultService
+                .getAllResults();
+        }
 
     @GetMapping("/{email}")
     public List<Result> getResultsByEmail(
@@ -186,6 +186,30 @@ public List<Result> getAllResults() {
             .getResultsByEmail(email);
       }
 
-    
 
+      @GetMapping("/review/{email}/{examTitle}")
+        public ResponseEntity<Result> getReviewData(
+
+        @PathVariable String email,
+
+        @PathVariable String examTitle
+        ) {
+
+        List<Result> results =
+            resultService
+                    .getResultsByEmail(email);
+
+         for (Result result : results) {
+
+        if (
+                result.getExamTitle()
+                        .equalsIgnoreCase(examTitle)
+        ) {
+
+            return ResponseEntity.ok(result);
+        }
+         }
+
+        return ResponseEntity.notFound().build();
+        }
 }

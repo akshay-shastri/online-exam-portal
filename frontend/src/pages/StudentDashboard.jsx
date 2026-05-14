@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
-import useTheme from "../hooks/useTheme";
 import "../styles/dashboard.css";
 
 function StudentDashboard() {
 
     const navigate = useNavigate();
+    const dark = true;
 
     const [exams, setExams] = useState([]);
     const [examsLoading, setExamsLoading] = useState(true);
@@ -33,7 +33,6 @@ function StudentDashboard() {
     const name = localStorage.getItem("name");
     const email = localStorage.getItem("email");
     const firstLetter = name ? name.charAt(0).toUpperCase() : "U";
-    const { dark, toggle: toggleTheme } = useTheme();
 
     useEffect(() => {
 
@@ -307,23 +306,7 @@ function StudentDashboard() {
     )}
 
 </div>
-
                     {/* Theme toggle */}
-                    <button
-                        onClick={toggleTheme}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0 ${dark ? "bg-gray-800 text-yellow-400 hover:bg-gray-700" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
-                        title={dark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    >
-                        {dark ? (
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.166 17.834a.75.75 0 00-1.06 1.06l1.59 1.591a.75.75 0 001.061-1.06l-1.59-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.166 6.166a.75.75 0 001.06 1.06l1.59-1.59a.75.75 0 00-1.06-1.061l-1.59 1.59z" />
-                            </svg>
-                        ) : (
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-                            </svg>
-                        )}
-                    </button>
 
                     <button
                         onClick={() => setShowDropdown(!showDropdown)}
@@ -646,12 +629,16 @@ function StudentDashboard() {
 
                                 {/* Button */}
                                 <button
-                                    onClick={() => startExam(exam.id)}
-                                    disabled={!!attemptedExams[exam.id] || examStatus !== 'ACTIVE'}
+                                    onClick={() => {
+
+                                        if (attemptedExams[exam.id]) {
+                                            navigate(`/review/${encodeURIComponent(exam.title)}`);
+                                        } else {startExam(exam.id);}}
+                                    }
+
+                                    disabled={!attemptedExams[exam.id] && examStatus !== 'ACTIVE'}
                                     className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 group/btn ${
-                                        attemptedExams[exam.id] || examStatus !== 'ACTIVE'
-                                            ? 'cursor-not-allowed'
-                                            : ''
+                                        !attemptedExams[exam.id] && examStatus !== 'ACTIVE' ? 'cursor-not-allowed' : ''
                                     }`}
                                     style={attemptedExams[exam.id] || examStatus !== 'ACTIVE' ? {
                                         background:'rgba(255,255,255,0.04)',
@@ -665,10 +652,21 @@ function StudentDashboard() {
                                 >
                                     {attemptedExams[exam.id] ? (
                                         <>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M15 12H9m12 0A9 9 0 1112 3a9 9 0 019 9z"
+                                                />
                                             </svg>
-                                            Already Attempted
+
+                                            View Answers
                                         </>
                                     ) : examStatus === 'UPCOMING' ? (
                                         <>

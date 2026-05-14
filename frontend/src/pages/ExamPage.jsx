@@ -33,7 +33,10 @@ function ExamPage() {
     const [bookmarkedQuestions, setBookmarkedQuestions] = useState([]);
     const [startFaceImage, setStartFaceImage] = useState(null);
     const [endFaceImage,setEndFaceImage] = useState(null);
-    const isMobile = window.innerWidth < 768;
+    const [captureCountdown, setCaptureCountdown] = useState(null);
+    const [captureFlash, setCaptureFlash] = useState(false);
+    const [capturingPhoto, setCapturingPhoto] = useState(false);
+    const [violationTimeline, setViolationTimeline] = useState([]);
 
     // Refs — always hold current values, no stale closure issues
     const violationsRef = useRef(0);
@@ -46,6 +49,7 @@ function ExamPage() {
     const faceIntervalRef = useRef(null);
     const startFaceImageRef = useRef(null);
     const endFaceImageRef = useRef(null);
+    const violationTimelineRef = useRef([]);
 
     // Keep refs in sync with state
     useEffect(() => { questionsRef.current = questions; }, [questions]);
@@ -83,6 +87,68 @@ function ExamPage() {
         setFlashWarning(true);
         setTimeout(() => setFlashWarning(false), 600);
     }, []);
+
+    const speakWarning = useCallback((message) => {
+
+    try {
+
+        // STOP previous speech
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(
+                message
+            );
+
+        speech.rate = 1;
+
+        speech.pitch = 1;
+
+        speech.volume = 1;
+
+        speech.lang = "en-US";
+
+        window.speechSynthesis.speak(
+            speech
+        );
+
+    } catch (e) {
+
+        console.log(e);
+    }
+
+}, []);
+
+
+const speakMessage = useCallback((message) => {
+
+    try {
+
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(
+                message
+            );
+
+        speech.rate = 1;
+
+        speech.pitch = 1;
+
+        speech.volume = 1;
+
+        speech.lang = "en-US";
+
+        window.speechSynthesis.speak(
+            speech
+        );
+
+    } catch (e) {
+
+        console.log(e);
+    }
+
+}, []);
 
     // ── submitExam uses refs so it never reads stale state ──
 
@@ -140,7 +206,7 @@ if (endImage) {
 }
 
         try {
-            await API.post("/results", { studentName, email, examTitle, score: finalScore, totalQuestions, percentage, startFaceImage: startFaceImageRef.current, endFaceImage: endFaceImageRef.current });
+            await API.post("/results", { studentName, email, examTitle, score: finalScore, totalQuestions, percentage, startFaceImage: startFaceImageRef.current, endFaceImage: endFaceImageRef.current, questionsJson: JSON.stringify(qs), answersJson: JSON.stringify(ans), violationTimelineJson:JSON.stringify(violationTimelineRef.current)});
         } catch (error) {
             console.log(error);
         }
@@ -167,6 +233,30 @@ if (endImage) {
         }
 
         setCameraEnabled(false);
+
+        try {
+
+            await API.post(
+                "/monitor/update",
+                {
+
+                    studentName,
+
+                    examTitle,
+
+                    violations:
+                        violationsRef.current,
+
+                    timeLeft: 0,
+
+                    status: "SUBMITTED"
+                }
+            );
+
+        } catch (e) {
+
+            console.log(e);
+        }
 
         navigate("/result", {
             state: {
@@ -199,9 +289,18 @@ const handleViolation = useCallback((reason) => {
 
     const count = violationsRef.current;
 
+    const timelineEntry = { reason, time: new Date().toLocaleTimeString()};
+
+    const updatedTimeline = [ ...violationTimelineRef.current, timelineEntry];
+
+    violationTimelineRef.current = updatedTimeline;
+    setViolationTimeline(updatedTimeline);
+
     triggerFlashWarning();
 
     playWarningSound();
+
+    speakWarning(reason);
 
     setWarning(
         `Warning: ${reason} (${count}/3)`
@@ -231,21 +330,18 @@ const handleViolation = useCallback((reason) => {
 
     if (count >= 3) {
 
-        toast.error(
-            "Exam auto-submitted due to multiple violations."
-        );
+        toast.error("Exam auto-submitted due to multiple violations.");
+        speakWarning("Exam auto submitted due to multiple violations");
+
 
         setCameraEnabled(false);
 
         submitExam();
     }
 
-}, [
-    triggerFlashWarning,
-    playWarningSound,
-    submitExam,
-    examId
-]);
+}, [ triggerFlashWarning,playWarningSound, speakWarning, submitExam, examId]
+
+);
 
 
     // ── Timer ──
@@ -502,6 +598,69 @@ useEffect(() => {
     handleViolation
 ]);
 
+    // ── Live monitor ping ──
+
+    useEffect(() => {
+
+        if (
+            !examStarted ||
+            submittedRef.current ||
+            alreadyAttempted
+        ) {
+            return;
+        }
+
+        const interval = setInterval(async () => {
+
+            try {
+
+                const studentName =
+                    localStorage.getItem("name")
+                    || "Unknown";
+
+                const examTitle =
+                    questionsRef.current[0]?.exam?.title
+                    || `Exam ${examId}`;
+
+                await API.post(
+                    "/monitor/update",
+                    {
+
+                        studentName,
+
+                        examTitle,
+
+                        violations:
+                            violationsRef.current,
+
+                        timeLeft:
+                            timeLeftRef.current || 0,
+
+                        status:
+                            submittedRef.current
+                                ? "SUBMITTED"
+                                : "ACTIVE"
+                    }
+                );
+
+            } catch (err) {
+
+                console.log(
+                    "LIVE MONITOR ERROR:",
+                    err
+                );
+            }
+
+        }, 5000);
+
+        return () => clearInterval(interval);
+
+    }, [
+        examStarted,
+        alreadyAttempted,
+        examId
+    ]);
+
     // ── Camera startup + track monitoring ──
 
     useEffect(() => {
@@ -534,8 +693,7 @@ useEffect(() => {
             .nets
             .tinyFaceDetector
             .loadFromUri("/models");
-
-        console.log("[CAMERA] Face detection model loaded");
+            console.log("[CAMERA] Face detection model loaded");
 
         if (cancelled) {
             console.log("[CAMERA] Initialization cancelled");
@@ -600,6 +758,7 @@ useEffect(() => {
                 playWarningSound();
                 setWarning("Warning: Camera disconnected. Exam auto-submitted.");
                 toast.error("Camera disconnected. Exam auto-submitted.");
+                speakWarning("Camera disconnected. Exam auto submitted");
                 submitExam();
             });
 
@@ -610,6 +769,7 @@ useEffect(() => {
                 playWarningSound();
                 setWarning("Warning: Camera disabled. Exam auto-submitted.");
                 toast.error("Camera disabled. Exam auto-submitted.");
+                speakWarning("Camera disabled. Exam auto submitted");
                 submitExam();
             });
         });
@@ -665,6 +825,7 @@ useEffect(() => {
         playWarningSound();
         setWarning("Warning: Camera access is required during exam.");
         toast.error("Camera access denied.");
+        speakWarning("Camera access is required during exam");
     }
 };
 
@@ -900,6 +1061,70 @@ const captureFaceSnapshot = () => {
     return image;
 };
 
+const startVerificationCapture = async () => {
+
+    if (capturingPhoto) return;
+
+    setCapturingPhoto(true);
+
+    speakMessage(
+        "Please look at the camera"
+    );
+
+    let count = 3;
+
+    setCaptureCountdown(count);
+
+    const interval = setInterval(() => {
+
+        count--;
+
+        if (count > 0) {
+
+            setCaptureCountdown(count);
+
+        } else {
+
+            clearInterval(interval);
+
+            setCaptureCountdown(null);
+
+            setCaptureFlash(true);
+
+            setTimeout(() => {
+
+                setCaptureFlash(false);
+
+            }, 250);
+
+            const image =
+                captureFaceSnapshot();
+
+            if (image) {
+
+                setStartFaceImage(image);
+
+                toast.success(
+                    "Verification photo captured"
+                );
+
+                speakMessage(
+                    "Photo captured successfully"
+                );
+
+            } else {
+
+                toast.error(
+                    "Failed to capture photo"
+                );
+            }
+
+            setCapturingPhoto(false);
+        }
+
+    }, 1000);
+};
+
 
     // ── Fullscreen helper ──
 const startExam = async () => {
@@ -966,7 +1191,35 @@ const reEnterFullscreen = async () => {
     const optionLabels = ["A", "B", "C", "D"];
 
 
-    if (isMobile) {
+
+    const isMobileDevice = () => { 
+        const userAgent = navigator.userAgent.toLowerCase();
+
+    const mobileKeywords = ["android", "iphone", "ipad", "ipod", "mobile", "opera mini", "iemobile"];
+
+    const isMobileUA = mobileKeywords.some(keyword =>
+            userAgent.includes(keyword)
+        );
+
+    const hasTouch = navigator.maxTouchPoints > 1;
+
+    const smallScreen = window.innerWidth <= 1024;
+
+    return ( isMobileUA || (hasTouch && smallScreen));
+};
+
+    // ── Timer urgency (UI only) ──
+    const timerUrgency = safeTime < 120  ? 'critical' : safeTime < 300 ? 'warning'  : 'normal';                 
+
+    const timerColors = {
+        normal:   { text: '#e9d5ff',  glow: 'rgba(124,58,237,0.55)',  bg: 'linear-gradient(135deg,#7c3aed,#a855f7)',  border: 'rgba(167,139,250,0.35)' },
+        warning:  { text: '#fed7aa',  glow: 'rgba(249,115,22,0.55)',  bg: 'linear-gradient(135deg,#c2410c,#f97316)',  border: 'rgba(249,115,22,0.45)'  },
+        critical: { text: '#fecaca',  glow: 'rgba(239,68,68,0.65)',   bg: 'linear-gradient(135deg,#991b1b,#ef4444)',  border: 'rgba(239,68,68,0.55)'   },
+    };
+    const tc = timerColors[timerUrgency];
+
+
+    if (isMobileDevice()) {
 
     return (
 
@@ -989,13 +1242,35 @@ const reEnterFullscreen = async () => {
 }
     return (
 
-        <div
-    className={`min-h-screen relative ${examStarted ? "select-none": "" } ${flashWarning ? "bg-red-200": "bg-[#f0f4ff] dark:bg-gray-950"} transition-colors duration-150`}
+    <div
+        className={`min-h-screen relative ${examStarted ? "select-none": "" } ${flashWarning ? "bg-red-900": "bg-[#0c0a1e]"} transition-colors duration-150`}
 
-    onCopy={(e) => { if (examStarted) {e.preventDefault();
-            handleViolation("Copy attempt detected");
-        }
-    }}>
+        onCopy={(e) => {
+            if (examStarted) {
+                e.preventDefault();
+                handleViolation("Copy attempt detected");
+            }
+        }}
+    >
+
+        {captureCountdown && (
+
+            <div className="fixed inset-0 z-[99999] bg-black/70 flex items-center justify-center">
+
+                <div className="text-white text-9xl font-black animate-pulse">
+
+                    {captureCountdown}
+
+                </div>
+
+            </div>
+        )}
+
+        {captureFlash && (
+
+            <div className="fixed inset-0 z-[99998] bg-white animate-pulse" />
+
+        )}
 
             {/* Header */}
             <div className="sticky top-0 z-50" style={{background:'rgba(12,10,30,0.88)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderBottom:'1px solid rgba(168,85,247,0.12)'}}>
@@ -1013,210 +1288,704 @@ const reEnterFullscreen = async () => {
                         </div>
                     </div>
                     {!alreadyAttempted && (
-                        <div className="px-5 py-2 rounded-xl font-bold text-sm" style={{background:'linear-gradient(135deg,#7c3aed,#a855f7)',boxShadow:'0 2px 16px rgba(124,58,237,0.4)',color:'white'}}>
-                            {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+                        <div
+                            className={`exam-timer-pill${timerUrgency === 'critical' ? ' exam-timer-critical' : timerUrgency === 'warning' ? ' exam-timer-warning' : ''}`}
+                            style={{
+                                background: tc.bg,
+                                boxShadow: `0 0 18px ${tc.glow}, 0 2px 8px rgba(0,0,0,0.4)`,
+                                border: `1px solid ${tc.border}`,
+                                color: tc.text,
+                            }}
+                        >
+                            {/* Clock icon */}
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.85,flexShrink:0}}>
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            <span className="exam-timer-digits">
+                                {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+                            </span>
+                            {timerUrgency !== 'normal' && (
+                                <span className="exam-timer-label">
+                                    {timerUrgency === 'critical' ? '⚠ Critical' : '⚠ Low'}
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Timer bar */}
-            <div className="w-full h-2 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+            <div className="w-full h-1.5 overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
                 <div
-                    className={`h-2 transition-all duration-1000 ${timerPercentage > 50 ? "bg-green-500" : timerPercentage > 20 ? "bg-yellow-400" : "bg-red-500 animate-pulse"}`}
-                    style={{ width: `${timerPercentage}%` }}
+                    className={`h-full transition-all duration-1000${timerUrgency === 'critical' ? ' exam-timerbar-pulse' : ''}`}
+                    style={{
+                        width: `${timerPercentage}%`,
+                        background:
+                            timerUrgency === 'critical' ? 'linear-gradient(90deg,#991b1b,#ef4444,#f87171)'
+                            : timerUrgency === 'warning'  ? 'linear-gradient(90deg,#c2410c,#f97316,#fb923c)'
+                            : 'linear-gradient(90deg,#4f46e5,#7c3aed,#a855f7)',
+                        boxShadow:
+                            timerUrgency === 'critical' ? '0 0 8px rgba(239,68,68,0.7)'
+                            : timerUrgency === 'warning'  ? '0 0 8px rgba(249,115,22,0.6)'
+                            : '0 0 6px rgba(124,58,237,0.5)',
+                        borderRadius: '0 2px 2px 0',
+                        transition: 'width 1s linear, background 0.8s ease, box-shadow 0.8s ease',
+                    }}
                 />
             </div>
 {/* Camera preview */}
 {!alreadyAttempted && !submitted && (
-    <div className="fixed top-4 right-4 z-50">
-                    <div className="bg-black rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-                       <video
-    ref={videoRef}
-    autoPlay
-    muted
-    playsInline
-    className="w-52 h-40 object-cover bg-black"
-/>
-                        <div className={`text-center text-xs font-bold py-1 ${cameraEnabled ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
-                            {cameraEnabled ? "Camera Active" : "Camera Off"}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {fullscreenExited && (
-
-    <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center">
-
-        <div className="bg-white rounded-3xl p-10 text-center max-w-md shadow-2xl">
-
-            <h2 className="text-2xl font-bold text-red-600 mb-4">
-
-                Fullscreen Required
-
-            </h2>
-
-            <p className="text-gray-600 mb-6">
-
-                You exited fullscreen mode.
-                Please return to fullscreen
-                to continue the exam.
-
-            </p>
-
-            <button
-                onClick={reEnterFullscreen}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold"
+    <div className="fixed top-[84px] right-4 z-50">
+        <div
+            style={{
+                borderRadius: '16px',
+                overflow: 'hidden',
+                border: cameraEnabled ? '1px solid rgba(34,197,94,0.45)' : '1px solid rgba(239,68,68,0.45)',
+                boxShadow: cameraEnabled
+                    ? '0 0 20px rgba(34,197,94,0.2), 0 8px 32px rgba(0,0,0,0.5)'
+                    : '0 0 20px rgba(239,68,68,0.2), 0 8px 32px rgba(0,0,0,0.5)',
+                background: 'rgba(8,6,20,0.85)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+            }}
+        >
+            <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                style={{width:'140px', height:'95px', objectFit:'cover', display:'block', background:'#000'}}
+            />
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '5px 10px',
+                    background: cameraEnabled ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                }}
             >
-                Return to Fullscreen
-            </button>
-
+                <span style={{
+                    width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
+                    background: cameraEnabled ? '#22c55e' : '#ef4444',
+                    boxShadow: cameraEnabled ? '0 0 6px #22c55e' : '0 0 6px #ef4444',
+                }} />
+                <span style={{
+                    fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px',
+                    color: cameraEnabled ? '#86efac' : '#fca5a5',
+                }}>
+                    {cameraEnabled ? 'LIVE' : 'OFFLINE'}
+                </span>
+            </div>
         </div>
-
     </div>
 )}
 
-            <div className="max-w-5xl mx-auto px-6 py-8">
+            {fullscreenExited && (
+    <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center"
+        style={{background:'rgba(4,2,18,0.88)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)'}}
+    >
+        <div
+            className="text-center max-w-md w-full mx-4 rounded-3xl overflow-hidden"
+            style={{
+                background: 'linear-gradient(160deg,rgba(109,40,217,0.14) 0%,rgba(12,10,30,0.95) 100%)',
+                border: '1px solid rgba(239,68,68,0.4)',
+                boxShadow: '0 0 60px rgba(239,68,68,0.15), 0 32px 64px rgba(0,0,0,0.6)',
+            }}
+        >
+            <div style={{height:'3px', background:'linear-gradient(90deg,#991b1b,#ef4444,#f87171)'}} />
+            <div className="p-10">
+                <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                    style={{
+                        background: 'rgba(239,68,68,0.15)',
+                        border: '1px solid rgba(239,68,68,0.35)',
+                        boxShadow: '0 0 28px rgba(239,68,68,0.25)',
+                    }}
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <h2
+                    className="text-2xl font-black mb-3"
+                    style={{background:'linear-gradient(90deg,#fecaca,#f87171)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}}
+                >
+                    Fullscreen Required
+                </h2>
+                <p style={{color:'rgba(196,181,253,0.55)', fontSize:'14px', lineHeight:'1.7', marginBottom:'28px'}}>
+                    You exited fullscreen mode. Please return to fullscreen to continue the exam.
+                </p>
+                <button
+                    onClick={reEnterFullscreen}
+                    className="w-full py-3.5 rounded-2xl font-black text-sm transition-all duration-200"
+                    style={{
+                        background: 'linear-gradient(135deg,#991b1b,#dc2626,#ef4444)',
+                        border: '1px solid rgba(239,68,68,0.4)',
+                        color: '#fff',
+                        boxShadow: '0 0 24px rgba(239,68,68,0.4)',
+                        letterSpacing: '0.3px',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow='0 0 40px rgba(239,68,68,0.6)'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow='0 0 24px rgba(239,68,68,0.4)'; e.currentTarget.style.transform='translateY(0)'; }}
+                >
+                    Return to Fullscreen
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+            <div className="max-w-7xl mx-auto px-6 py-8">
 
                 {/* Warning banner */}
                 {warning && (
-                    <div className="mb-6 bg-red-100 border border-red-300 text-red-700 px-5 py-4 rounded-2xl font-semibold shadow-sm">
-                        {warning}
+                    <div className="mb-6 flex justify-center">
+                        <div
+                            className="exam-warning-banner w-full max-w-2xl"
+                            role="status"
+                            aria-live="polite"
+                        >
+                            <div className="exam-warning-banner-icon" aria-hidden="true">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+                            <div className="min-w-0">
+                                <p className="exam-warning-banner-kicker">Violation detected</p>
+                                <p className="exam-warning-banner-text">
+                                    {warning}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {/* Loading */}
-                {questionsLoading && (
-                    <div className="text-center py-32">
-                        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-gray-500">Loading questions...</p>
-                    </div>
-                )}
+             {/* Loading */}
+{questionsLoading && (
+    <div className="flex items-center justify-center py-28">
+        <div
+            className="w-full max-w-2xl rounded-3xl overflow-hidden"
+            style={{
+                background:
+                    'linear-gradient(160deg,rgba(109,40,217,0.12) 0%,rgba(12,10,30,0.88) 100%)',
+                border:
+                    '1px solid rgba(168,85,247,0.22)',
+                boxShadow:
+                    '0 0 60px rgba(124,58,237,0.15), 0 24px 64px rgba(0,0,0,0.5)',
+                backdropFilter:'blur(20px)',
+            }}
+        >
+            <div
+                className="h-1"
+                style={{
+                    background:
+                        'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)'
+                }}
+            />
+
+            <div className="p-10">
+
+                <div className="flex justify-center mb-8">
+                    <div
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center animate-spin"
+                        style={{
+                            border:
+                                '3px solid rgba(168,85,247,0.15)',
+                            borderTop:
+                                '3px solid #a855f7',
+                            boxShadow:
+                                '0 0 28px rgba(124,58,237,0.35)',
+                        }}
+                    />
+                </div>
+
+                <div className="space-y-4">
+                    {[1,2,3].map((i)=>(
+                        <div
+                            key={i}
+                            className="rounded-2xl overflow-hidden"
+                            style={{
+                                background:
+                                    'rgba(255,255,255,0.04)',
+                                border:
+                                    '1px solid rgba(255,255,255,0.06)',
+                                padding:'18px',
+                            }}
+                        >
+                            <div
+                                className="animate-pulse rounded-xl"
+                                style={{
+                                    height:'18px',
+                                    width: i===2 ? '75%' : '100%',
+                                    background:
+                                        'linear-gradient(90deg,rgba(124,58,237,0.08),rgba(168,85,247,0.18),rgba(124,58,237,0.08))',
+                                }}
+                            />
+                        </div>
+                    ))}
+                </div>
+
+                <p
+                    className="text-center mt-8 font-semibold"
+                    style={{
+                        color:'rgba(196,181,253,0.7)',
+                        letterSpacing:'0.3px',
+                    }}
+                >
+                    Preparing your examination...
+                </p>
+            </div>
+        </div>
+    </div>
+)}
 
                 {/* Already Attempted */}
-                {!questionsLoading && alreadyAttempted && (
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center shadow-sm">
-                        <h2 className="text-2xl font-bold text-amber-500 mb-4">You already attempted this exam</h2>
-                        <button
-                            onClick={() => navigate("/student-dashboard")}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold"
-                        >
-                            Back to Dashboard
-                        </button>
-                    </div>
-                )}
+              {/* Already Attempted */}
+{!questionsLoading && alreadyAttempted && (
+    <div className="flex items-center justify-center py-20">
+        <div
+            className="w-full max-w-2xl rounded-3xl overflow-hidden text-center"
+            style={{
+                background:
+                    'linear-gradient(160deg,rgba(16,185,129,0.12) 0%,rgba(12,10,30,0.92) 100%)',
+                border:
+                    '1px solid rgba(16,185,129,0.28)',
+                boxShadow:
+                    '0 0 60px rgba(16,185,129,0.14), 0 24px 64px rgba(0,0,0,0.55)',
+                backdropFilter:'blur(22px)',
+            }}
+        >
+            <div
+                className="h-1"
+                style={{
+                    background:
+                        'linear-gradient(90deg,#059669,#10b981,#34d399)'
+                }}
+            />
 
-                {/* Error */}
-                {!questionsLoading && questionsError && (
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center shadow-sm">
-                        <h2 className="text-2xl font-bold text-red-500 mb-4">Failed to load questions</h2>
-                    </div>
-                )}
+            <div className="p-12">
+
+                <div
+                    className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"
+                    style={{
+                        background:
+                            'rgba(16,185,129,0.15)',
+                        border:
+                            '1px solid rgba(16,185,129,0.35)',
+                        boxShadow:
+                            '0 0 32px rgba(16,185,129,0.25)',
+                    }}
+                >
+                    <svg
+                        width="42"
+                        height="42"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#34d399"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                </div>
+
+                <h2
+                    className="text-4xl font-black mb-4"
+                    style={{
+                        background:
+                            'linear-gradient(90deg,#d1fae5,#6ee7b7)',
+                        WebkitBackgroundClip:'text',
+                        WebkitTextFillColor:'transparent',
+                    }}
+                >
+                    Exam Already Attempted
+                </h2>
+
+                <p
+                    className="mb-10"
+                    style={{
+                        color:'rgba(167,243,208,0.75)',
+                        fontSize:'15px',
+                        lineHeight:'1.8',
+                    }}
+                >
+                    You have already completed this examination.
+                    Multiple attempts are not allowed.
+                </p>
+
+                <button
+                    onClick={() => navigate("/student-dashboard")}
+                    className="px-8 py-4 rounded-2xl font-bold transition-all duration-200"
+                    style={{
+                        background:
+                            'linear-gradient(135deg,#059669,#10b981)',
+                        border:
+                            '1px solid rgba(110,231,183,0.35)',
+                        color:'#fff',
+                        boxShadow:
+                            '0 0 28px rgba(16,185,129,0.35)',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.transform='translateY(-2px)';
+                        e.currentTarget.style.boxShadow='0 0 42px rgba(16,185,129,0.45)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.transform='translateY(0)';
+                        e.currentTarget.style.boxShadow='0 0 28px rgba(16,185,129,0.35)';
+                    }}
+                >
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+
+              {/* Error */}
+{!questionsLoading && questionsError && (
+    <div className="flex items-center justify-center py-20">
+        <div
+            className="w-full max-w-2xl rounded-3xl overflow-hidden text-center"
+            style={{
+                background:
+                    'linear-gradient(160deg,rgba(239,68,68,0.12) 0%,rgba(12,10,30,0.92) 100%)',
+                border:
+                    '1px solid rgba(239,68,68,0.28)',
+                boxShadow:
+                    '0 0 60px rgba(239,68,68,0.14), 0 24px 64px rgba(0,0,0,0.55)',
+                backdropFilter:'blur(22px)',
+            }}
+        >
+            <div
+                className="h-1"
+                style={{
+                    background:
+                        'linear-gradient(90deg,#991b1b,#ef4444,#f87171)'
+                }}
+            />
+
+            <div className="p-12">
+
+                <div
+                    className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"
+                    style={{
+                        background:
+                            'rgba(239,68,68,0.15)',
+                        border:
+                            '1px solid rgba(239,68,68,0.35)',
+                        boxShadow:
+                            '0 0 32px rgba(239,68,68,0.25)',
+                    }}
+                >
+                    <svg
+                        width="42"
+                        height="42"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#f87171"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+
+                <h2
+                    className="text-4xl font-black mb-4"
+                    style={{
+                        background:
+                            'linear-gradient(90deg,#fecaca,#f87171)',
+                        WebkitBackgroundClip:'text',
+                        WebkitTextFillColor:'transparent',
+                    }}
+                >
+                    Failed to Load Questions
+                </h2>
+
+                <p
+                    className="mb-10"
+                    style={{
+                        color:'rgba(252,165,165,0.75)',
+                        fontSize:'15px',
+                        lineHeight:'1.8',
+                    }}
+                >
+                    Something went wrong while loading the examination.
+                    Please try again.
+                </p>
+
+                <button
+                    onClick={fetchQuestions}
+                    className="px-8 py-4 rounded-2xl font-bold transition-all duration-200"
+                    style={{
+                        background:
+                            'linear-gradient(135deg,#991b1b,#ef4444)',
+                        border:
+                            '1px solid rgba(248,113,113,0.35)',
+                        color:'#fff',
+                        boxShadow:
+                            '0 0 28px rgba(239,68,68,0.35)',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.transform='translateY(-2px)';
+                        e.currentTarget.style.boxShadow='0 0 42px rgba(239,68,68,0.45)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.transform='translateY(0)';
+                        e.currentTarget.style.boxShadow='0 0 28px rgba(239,68,68,0.35)';
+                    }}
+                >
+                    Retry Loading
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
                 {/* Instructions */}
                 {!questionsLoading && !questionsError && !alreadyAttempted && questions.length > 0 && !examStarted && (
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden p-10">
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-blue-600 mb-3">Exam Instructions</h2>
-                            <p className="text-gray-500">Please read all instructions carefully before starting the exam.</p>
-                        </div>
-                        <div className="space-y-4 text-gray-700 dark:text-gray-200">
-                            <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
-                                ⏱ Duration: <span className="font-bold ml-2">{Math.floor(displayTime / 60)} minutes</span>
+                    <div
+                        className="rounded-3xl overflow-hidden"
+                        style={{
+                            background: 'linear-gradient(160deg,rgba(109,40,217,0.13) 0%,rgba(12,10,30,0.85) 100%)',
+                            border: '1px solid rgba(168,85,247,0.28)',
+                            boxShadow: '0 0 60px rgba(109,40,217,0.18), 0 24px 64px rgba(0,0,0,0.5)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                        }}
+                    >
+                        {/* Top accent bar */}
+                        <div className="h-1" style={{background:'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)'}} />
+
+                        <div className="p-10">
+                            {/* Heading */}
+                            <div className="text-center mb-10">
+                                <div
+                                    className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 text-xs font-bold tracking-widest uppercase"
+                                    style={{
+                                        background: 'rgba(124,58,237,0.2)',
+                                        border: '1px solid rgba(168,85,247,0.35)',
+                                        color: '#c4b5fd',
+                                        boxShadow: '0 0 16px rgba(124,58,237,0.2)',
+                                    }}
+                                >
+                                    <span style={{width:'6px',height:'6px',borderRadius:'50%',background:'#a855f7',boxShadow:'0 0 6px #a855f7',display:'inline-block'}} />
+                                    Exam Ready
+                                </div>
+                                <h2
+                                    className="text-4xl font-black mb-3"
+                                    style={{
+                                        background: 'linear-gradient(90deg,#f3e8ff,#c4b5fd,#a78bfa)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        textShadow: 'none',
+                                        filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.45))',
+                                    }}
+                                >
+                                    Exam Instructions
+                                </h2>
+                                <p style={{color:'rgba(196,181,253,0.55)',fontSize:'15px'}}>Please read all instructions carefully before starting.</p>
                             </div>
-                            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">📷 Webcam access is required during exam.</div>
-                            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">🖥 Fullscreen mode will be enabled.</div>
-                            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">⚠ Tab switching and fullscreen exit are monitored.</div>
-                            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">🚫 Multiple violations may auto-submit the exam.</div>
+
+                            {/* Instruction items */}
+                            <div className="space-y-3 mb-10">
+                                {[
+                                    { icon: '⏱', label: 'Duration', value: `${Math.floor(displayTime / 60)} minutes`, accent: true },
+                                    { icon: '📷', label: 'Webcam access is required throughout the exam.' },
+                                    { icon: '🖥', label: 'Fullscreen mode will be enabled automatically.' },
+                                    { icon: '⚠', label: 'Tab switching and fullscreen exit are monitored.' },
+                                    { icon: '🚫', label: 'Multiple violations will auto-submit the exam.' },
+                                ].map((item, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-center gap-4 rounded-2xl transition-all duration-200"
+                                        style={{
+                                            padding: '14px 18px',
+                                            background: item.accent
+                                                ? 'linear-gradient(135deg,rgba(124,58,237,0.22),rgba(168,85,247,0.12))'
+                                                : 'rgba(255,255,255,0.04)',
+                                            border: item.accent
+                                                ? '1px solid rgba(168,85,247,0.35)'
+                                                : '1px solid rgba(255,255,255,0.07)',
+                                            boxShadow: item.accent ? '0 0 20px rgba(124,58,237,0.15)' : 'none',
+                                        }}
+                                        onMouseEnter={e => {
+                                            e.currentTarget.style.background = item.accent
+                                                ? 'linear-gradient(135deg,rgba(124,58,237,0.32),rgba(168,85,247,0.2))'
+                                                : 'rgba(124,58,237,0.1)';
+                                            e.currentTarget.style.border = '1px solid rgba(168,85,247,0.35)';
+                                            e.currentTarget.style.boxShadow = '0 0 16px rgba(124,58,237,0.18)';
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.background = item.accent
+                                                ? 'linear-gradient(135deg,rgba(124,58,237,0.22),rgba(168,85,247,0.12))'
+                                                : 'rgba(255,255,255,0.04)';
+                                            e.currentTarget.style.border = item.accent
+                                                ? '1px solid rgba(168,85,247,0.35)'
+                                                : '1px solid rgba(255,255,255,0.07)';
+                                            e.currentTarget.style.boxShadow = item.accent ? '0 0 20px rgba(124,58,237,0.15)' : 'none';
+                                        }}
+                                    >
+                                        <span style={{fontSize:'20px',flexShrink:0}}>{item.icon}</span>
+                                        <span style={{color:'rgba(196,181,253,0.85)',fontSize:'14px',fontWeight:500}}>
+                                            {item.label}
+                                            {item.value && (
+                                                <span style={{color:'#e9d5ff',fontWeight:800,marginLeft:'8px'}}>{item.value}</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Capture / Preview */}
+                            <div className="mb-6">
+                                {!startFaceImage ? (
+                                    <button
+                                        onClick={startVerificationCapture}
+                                        disabled={capturingPhoto}
+                                        className="w-full py-4 rounded-2xl font-bold text-base transition-all duration-200"
+                                        style={{
+                                            background: capturingPhoto
+                                                ? 'rgba(124,58,237,0.25)'
+                                                : 'linear-gradient(135deg,rgba(109,40,217,0.55),rgba(168,85,247,0.4))',
+                                            border: '1px solid rgba(168,85,247,0.45)',
+                                            color: capturingPhoto ? 'rgba(196,181,253,0.5)' : '#e9d5ff',
+                                            boxShadow: capturingPhoto ? 'none' : '0 0 24px rgba(124,58,237,0.3)',
+                                            cursor: capturingPhoto ? 'not-allowed' : 'pointer',
+                                        }}
+                                        onMouseEnter={e => {
+                                            if (!capturingPhoto) {
+                                                e.currentTarget.style.boxShadow = '0 0 36px rgba(168,85,247,0.5)';
+                                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                            }
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.boxShadow = capturingPhoto ? 'none' : '0 0 24px rgba(124,58,237,0.3)';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }}
+                                    >
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                                <circle cx="12" cy="13" r="4" />
+                                            </svg>
+                                            {capturingPhoto ? 'Capturing...' : 'Capture Verification Photo'}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    <div
+                                        className="flex flex-col items-center rounded-3xl p-6"
+                                        style={{
+                                            background: 'linear-gradient(160deg,rgba(16,185,129,0.12),rgba(12,10,30,0.6))',
+                                            border: '1px solid rgba(16,185,129,0.35)',
+                                            boxShadow: '0 0 32px rgba(16,185,129,0.15)',
+                                        }}
+                                    >
+                                        <div className="relative mb-4">
+                                            <img
+                                                src={startFaceImage}
+                                                alt="Captured Face"
+                                                className="w-44 h-36 object-cover rounded-2xl"
+                                                style={{
+                                                    border: '2px solid rgba(16,185,129,0.6)',
+                                                    boxShadow: '0 0 24px rgba(16,185,129,0.35)',
+                                                }}
+                                            />
+                                            <div
+                                                className="absolute -top-2 -right-2 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
+                                                style={{
+                                                    background: 'linear-gradient(135deg,#059669,#10b981)',
+                                                    color: '#fff',
+                                                    boxShadow: '0 0 12px rgba(16,185,129,0.5)',
+                                                }}
+                                            >
+                                                ✓ Verified
+                                            </div>
+                                        </div>
+                                        <p style={{color:'#6ee7b7',fontWeight:600,fontSize:'14px',marginBottom:'16px'}}>
+                                            Verification photo captured successfully
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setStartFaceImage(null);
+                                                startFaceImageRef.current = null;
+                                                toast.success('Capture a new photo');
+                                            }}
+                                            className="px-6 py-2.5 rounded-xl font-semibold transition-all duration-200"
+                                            style={{
+                                                background: 'rgba(255,255,255,0.06)',
+                                                border: '1px solid rgba(255,255,255,0.12)',
+                                                color: 'rgba(196,181,253,0.7)',
+                                                fontSize: '13px',
+                                            }}
+                                            onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                                        >
+                                            Recapture Photo
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Start Exam button */}
+                            <button
+                                onClick={() => {
+                                    if (!startFaceImage) {
+                                        toast.error('Please capture verification photo first.');
+                                        return;
+                                    }
+                                    startExam();
+                                }}
+                                className="w-full py-4 rounded-2xl font-black text-lg transition-all duration-200"
+                                style={{
+                                    background: startFaceImage
+                                        ? 'linear-gradient(135deg,#6d28d9,#7c3aed,#a855f7)'
+                                        : 'rgba(255,255,255,0.05)',
+                                    border: startFaceImage
+                                        ? '1px solid rgba(216,180,254,0.4)'
+                                        : '1px solid rgba(255,255,255,0.08)',
+                                    color: startFaceImage ? '#fff' : 'rgba(196,181,253,0.3)',
+                                    boxShadow: startFaceImage
+                                        ? '0 0 32px rgba(124,58,237,0.5), 0 8px 24px rgba(0,0,0,0.4)'
+                                        : 'none',
+                                    cursor: startFaceImage ? 'pointer' : 'not-allowed',
+                                    letterSpacing: '0.5px',
+                                }}
+                                onMouseEnter={e => {
+                                    if (startFaceImage) {
+                                        e.currentTarget.style.boxShadow = '0 0 48px rgba(168,85,247,0.65), 0 12px 32px rgba(0,0,0,0.5)';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                    }
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.boxShadow = startFaceImage
+                                        ? '0 0 32px rgba(124,58,237,0.5), 0 8px 24px rgba(0,0,0,0.4)'
+                                        : 'none';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polygon points="5 3 19 12 5 21 5 3" />
+                                    </svg>
+                                    Start Exam
+                                </span>
+                            </button>
                         </div>
-
-                        <div className="mt-8">
-
-    {!startFaceImage ? (
-
-        <button
-            onClick={() => {
-
-                const image =
-                    captureFaceSnapshot();
-
-                if (image) {
-
-                    setStartFaceImage(
-                        image
-                    );
-
-                    toast.success(
-                        "Verification photo captured"
-                    );
-
-                } else {
-
-                    toast.error(
-                        "Failed to capture photo"
-                    );
-                }
-            }}
-            className="premium-btn-primary w-full mb-4 py-4 text-lg"
-        >
-            Capture Verification Photo
-        </button>
-
-    ) : (
-
-        <div className="mb-8 flex flex-col items-center">
-
-    <img
-        src={startFaceImage}
-        alt="Captured Face"
-        className="w-44 h-36 object-cover rounded-2xl border-4 border-emerald-400 shadow-lg"
-    />
-
-    <p className="text-center text-sm text-emerald-600 font-semibold mt-4">
-        Verification photo captured successfully
-    </p>
-
-    <button
-        onClick={() => {
-
-            setStartFaceImage(null);
-
-            startFaceImageRef.current =
-                null;
-
-            toast.success(
-                "Capture a new photo"
-            );
-        }}
-        className="mt-5 px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-semibold transition-all duration-200"
-    >
-        Recapture Photo
-    </button>
-
-</div>
-
-    )}
-
-</div>
-                        <button
-                            onClick={() => {
-
-    if (!startFaceImage) {
-
-        toast.error(
-            "Please capture verification photo first."
-        );
-
-        return;
-    }
-
-    startExam();
-}}
-                            className="premium-btn-primary w-full mt-8 py-4 text-lg"
-                        >
-                            Start Exam
-                        </button>
                     </div>
                 )}
 
@@ -1224,139 +1993,362 @@ const reEnterFullscreen = async () => {
                 {!questionsLoading && !questionsError && !alreadyAttempted && questions.length > 0 && examStarted && (
                 <>
 
-                    {/* Progress */}
-                    <div className="mb-8">
-                        <div className="flex justify-between text-sm font-semibold mb-2 text-gray-500">
+                    {/* Progress bar */}
+                    <div className="mb-6">
+                        <div className="flex justify-between text-sm font-semibold mb-2" style={{color:'rgba(196,181,253,0.7)'}}>
                             <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
                             <span>{answeredCount}/{questions.length} answered</span>
                         </div>
-                        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
+                        <div className="w-full h-2 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.07)'}}>
                             <div
-                                className="h-3 bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300"
-                                style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                                className="h-2 rounded-full transition-all duration-500"
+                                style={{
+                                    width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+                                    background: 'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)'
+                                }}
                             />
                         </div>
                     </div>
 
-                    {/* Question Navigator */}
-                    <div className="flex flex-wrap gap-3 mb-8">
-                        {questions.map((q, index) => {
-                            const answered = answers[q.id];
-                            const active = currentQuestionIndex === index;
-                            const bookmarked = bookmarkedQuestions.includes(q.id);
-                            
-                            return (
-                                <button
-                                    key={q.id}
-                                    onClick={() => setCurrentQuestionIndex(index)}
-className={`w-11 h-11 rounded-xl text-sm font-bold transition-all duration-200 ${
-    active
-        ? "bg-blue-600 text-white"
-        : bookmarked
-        ? "bg-yellow-400 text-black"
-        : answered
-        ? "bg-emerald-500 text-white"
-        : "bg-white border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-}`}                                >
-                                    {index + 1}
-                                </button>
-                            );
-                        })}
-                    </div>
+                    {/* Two-column layout: mini-map sidebar + question card */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 items-start">
 
-                    {/* Question Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                        <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
-                        <div className="p-8">
-
-                            <div className="flex items-start gap-4 mb-8">
-                                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center">
-                                    {currentQuestionIndex + 1}
-                                </div>
-                                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 leading-relaxed">
-                                    {currentQuestion.questionText}
-                                </h2>
-                            </div>
-
-                            <div className="flex justify-end mb-6">
-
-    <button
-        onClick={() =>
-            toggleBookmark(currentQuestion.id)
-        }
-        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-            bookmarkedQuestions.includes(
-                currentQuestion.id
-            )
-                ? "bg-yellow-400 text-black"
-                : "bg-gray-200 text-gray-700 hover:bg-yellow-300"
-        }`}
-    >
-        {bookmarkedQuestions.includes(
-            currentQuestion.id
-        )
-            ? "★ Bookmarked"
-            : "☆ Bookmark"}
-    </button>
-
-</div>
-
-                            
-
-                            <div className="space-y-4">
-                                {[currentQuestion.optionA, currentQuestion.optionB, currentQuestion.optionC, currentQuestion.optionD].map((option, i) => {
-                                    const isSelected = answers[currentQuestion.id] === optionLabels[i];
-                                    return (
-                                        <button
-                                            key={i}
-                                            onClick={async () => {
-                                                if (!document.fullscreenElement) {
-                                                    try { await enterFullscreen(); } catch (e) { console.log(e); }
-                                                }
-                                                handleOptionSelect(currentQuestion.id, optionLabels[i]);
-                                            }}
-                                            className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 ${ isSelected ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-800 hover:border-blue-300 hover:bg-blue-50"}`}>
-                                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${ isSelected ? "bg-blue-500 text-white" : "bg-gray-100 border border-gray-300 text-gray-700"}`}>
-                                                {optionLabels[i]}
-                                            </div>
-                                            <span className="font-medium">{option}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Navigation */}
-                            <div className="flex items-center justify-between mt-10">
-                                <button
-                                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-                                    disabled={currentQuestionIndex === 0}
-                                    className="px-6 py-3 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        {/* ── Question Mini Map (sticky sidebar) ── */}
+                        <div
+                            className="hidden lg:flex flex-col gap-0 flex-shrink-0"
+                            style={{
+                                width: '220px',
+                                position: 'sticky',
+                                top: '80px',
+                                maxHeight: 'calc(100vh - 120px)',
+                            }}
+                        >
+                            <div
+                                className="rounded-2xl overflow-hidden"
+                                style={{
+                                    background: 'linear-gradient(160deg,rgba(124,58,237,0.13) 0%,rgba(12,10,30,0.7) 100%)',
+                                    border: '1px solid rgba(168,85,247,0.18)',
+                                    backdropFilter: 'blur(20px)',
+                                    WebkitBackdropFilter: 'blur(20px)',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                                }}
+                            >
+                                {/* Mini-map header */}
+                                <div
+                                    className="px-4 py-3 flex items-center justify-between"
+                                    style={{borderBottom:'1px solid rgba(168,85,247,0.12)'}}
                                 >
-                                    Previous
-                                </button>
+                                    <span className="text-xs font-bold tracking-widest uppercase" style={{color:'rgba(196,181,253,0.6)'}}>Questions</span>
+                                    <span
+                                        className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                        style={{background:'rgba(124,58,237,0.25)',color:'#c4b5fd',border:'1px solid rgba(167,139,250,0.2)'}}
+                                    >
+                                        {answeredCount}/{questions.length}
+                                    </span>
+                                </div>
 
-                                {currentQuestionIndex === questions.length - 1 ? (
-                                    <button
-                                        onClick={() => setShowSubmitConfirm(true)}
-                                        className="premium-btn-primary px-8 py-3 text-sm font-bold"
-                                    >
-                                        Submit Exam
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={async () => {
-                                            if (!document.fullscreenElement) {
-                                                try { await enterFullscreen(); } catch (e) { console.log(e); }
+                                {/* Scrollable grid */}
+                                <div
+                                    className="p-3 overflow-y-auto"
+                                    style={{maxHeight:'calc(100vh - 260px)'}}
+                                >
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {questions.map((q, index) => {
+                                            const answered = !!answers[q.id];
+                                            const active   = currentQuestionIndex === index;
+                                            const bookmarked = bookmarkedQuestions.includes(q.id);
+
+                                            let bg, color, shadow, border;
+                                            if (active) {
+                                                bg     = 'linear-gradient(135deg,#7c3aed,#a855f7)';
+                                                color  = '#fff';
+                                                shadow = '0 0 12px rgba(168,85,247,0.7),0 0 24px rgba(124,58,237,0.4)';
+                                                border = '2px solid rgba(216,180,254,0.6)';
+                                            } else if (bookmarked) {
+                                                bg     = 'rgba(234,179,8,0.2)';
+                                                color  = '#fde68a';
+                                                shadow = 'none';
+                                                border = '2px solid rgba(234,179,8,0.5)';
+                                            } else if (answered) {
+                                                bg     = 'rgba(34,197,94,0.18)';
+                                                color  = '#86efac';
+                                                shadow = 'none';
+                                                border = '2px solid rgba(34,197,94,0.35)';
+                                            } else {
+                                                bg     = 'rgba(255,255,255,0.05)';
+                                                color  = 'rgba(196,181,253,0.55)';
+                                                shadow = 'none';
+                                                border = '2px solid rgba(255,255,255,0.08)';
                                             }
-                                            setCurrentQuestionIndex(currentQuestionIndex + 1);
-                                        }}
-                                        className="premium-btn-primary px-6 py-3 text-sm font-semibold"
-                                    >
-                                        Next
-                                    </button>
-                                )}
+
+                                            return (
+                                                <button
+                                                    key={q.id}
+                                                    onClick={() => setCurrentQuestionIndex(index)}
+                                                    title={`Question ${index + 1}${answered ? ' — Answered' : ''}${bookmarked ? ' — Bookmarked' : ''}`}
+                                                    style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '10px',
+                                                        background: bg,
+                                                        color,
+                                                        border,
+                                                        boxShadow: shadow,
+                                                        fontSize: '12px',
+                                                        fontWeight: 700,
+                                                        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        position: 'relative',
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        if (!active) {
+                                                            e.currentTarget.style.transform = 'scale(1.15)';
+                                                            e.currentTarget.style.boxShadow = '0 0 10px rgba(168,85,247,0.4)';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        if (!active) {
+                                                            e.currentTarget.style.transform = 'scale(1)';
+                                                            e.currentTarget.style.boxShadow = shadow;
+                                                        }
+                                                    }}
+                                                >
+                                                    {bookmarked && !active ? '★' : index + 1}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Legend */}
+                                <div
+                                    className="px-4 py-3 space-y-1.5"
+                                    style={{borderTop:'1px solid rgba(168,85,247,0.1)'}}
+                                >
+                                    {[
+                                        {color:'linear-gradient(135deg,#7c3aed,#a855f7)', label:'Current'},
+                                        {color:'rgba(34,197,94,0.5)',                     label:'Answered'},
+                                        {color:'rgba(234,179,8,0.4)',                     label:'Bookmarked'},
+                                        {color:'rgba(255,255,255,0.08)',                  label:'Unattempted'},
+                                    ].map(({color: c, label}) => (
+                                        <div key={label} className="flex items-center gap-2">
+                                            <div style={{width:'10px',height:'10px',borderRadius:'3px',background:c,flexShrink:0}} />
+                                            <span style={{fontSize:'11px',color:'rgba(196,181,253,0.5)'}}>{label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Question Card (main content) ── */}
+                        <div className="flex-1 min-w-0">
+
+                            {/* Mobile mini-map (horizontal scroll) */}
+                            <div
+                                className="lg:hidden mb-5 rounded-2xl p-3 overflow-x-auto"
+                                style={{
+                                    background: 'linear-gradient(160deg,rgba(124,58,237,0.13) 0%,rgba(12,10,30,0.7) 100%)',
+                                    border: '1px solid rgba(168,85,247,0.18)',
+                                    backdropFilter: 'blur(20px)',
+                                }}
+                            >
+                                <div className="flex gap-2" style={{minWidth:'max-content'}}>
+                                    {questions.map((q, index) => {
+                                        const answered    = !!answers[q.id];
+                                        const active      = currentQuestionIndex === index;
+                                        const bookmarked  = bookmarkedQuestions.includes(q.id);
+
+                                        let bg, color, border;
+                                        if (active)          { bg='linear-gradient(135deg,#7c3aed,#a855f7)'; color='#fff';              border='2px solid rgba(216,180,254,0.6)'; }
+                                        else if (bookmarked) { bg='rgba(234,179,8,0.2)';                     color='#fde68a';           border='2px solid rgba(234,179,8,0.5)'; }
+                                        else if (answered)   { bg='rgba(34,197,94,0.18)';                    color='#86efac';           border='2px solid rgba(34,197,94,0.35)'; }
+                                        else                 { bg='rgba(255,255,255,0.05)';                  color='rgba(196,181,253,0.55)'; border='2px solid rgba(255,255,255,0.08)'; }
+
+                                        return (
+                                            <button
+                                                key={q.id}
+                                                onClick={() => setCurrentQuestionIndex(index)}
+                                                style={{
+                                                    width:'36px', height:'36px', borderRadius:'9px',
+                                                    background:bg, color, border,
+                                                    fontSize:'11px', fontWeight:700,
+                                                    flexShrink:0,
+                                                    boxShadow: active ? '0 0 12px rgba(168,85,247,0.7)' : 'none',
+                                                    transition:'all 0.2s',
+                                                    display:'flex', alignItems:'center', justifyContent:'center',
+                                                }}
+                                            >
+                                                {bookmarked && !active ? '★' : index + 1}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
+                            {/* Question Card */}
+                            <div
+                                className="rounded-3xl overflow-hidden"
+                                style={{
+                                    background: 'linear-gradient(160deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.015) 100%)',
+                                    border: '1px solid rgba(168,85,247,0.15)',
+                                    boxShadow: `0 0 0 1px rgba(168,85,247,0.08), 0 20px 60px rgba(0,0,0,0.55), 0 0 40px rgba(124,58,237,0.12)`,
+                                    position:'relative',
+                                    overflow:'hidden',
+                                }}
+                            >
+
+                            <div
+                                style={{
+                                    position:'absolute',
+                                    inset:0,
+                                    background: 'radial-gradient(circle at top right, rgba(168,85,247,0.12), transparent 40%)',
+                                    pointerEvents:'none',
+                                }}
+                            />
+                                <div className="h-1" style={{background:'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)'}} />
+                                <div className="p-8">
+
+                                    <div className="flex items-start gap-4 mb-8">
+                                        <div
+                                            className="w-10 h-10 rounded-xl font-bold flex items-center justify-center flex-shrink-0 text-white"
+                                            style={{background:'linear-gradient(135deg,#7c3aed,#a855f7)',boxShadow:'0 0 16px rgba(124,58,237,0.5)'}}
+                                        >
+                                            {currentQuestionIndex + 1}
+                                        </div>
+                                        <h2 className="text-2xl md:text-3xl font-bold leading-relaxed tracking-tight" style={{color:'rgba(243,232,255,0.95)'}}>
+                                            {currentQuestion.questionText}
+                                        </h2>
+                                    </div>
+
+                                    <div className="flex justify-end mb-6">
+                                        <button
+                                            onClick={() => toggleBookmark(currentQuestion.id)}
+                                            className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                                            style={{
+                                                background: bookmarkedQuestions.includes(currentQuestion.id)
+                                                    ? 'rgba(234,179,8,0.2)'
+                                                    : 'rgba(255,255,255,0.06)',
+                                                border: bookmarkedQuestions.includes(currentQuestion.id)
+                                                    ? '1px solid rgba(234,179,8,0.4)'
+                                                    : '1px solid rgba(255,255,255,0.1)',
+                                                color: bookmarkedQuestions.includes(currentQuestion.id)
+                                                    ? '#fde68a'
+                                                    : 'rgba(196,181,253,0.6)',
+                                            }}
+                                        >
+                                            {bookmarkedQuestions.includes(currentQuestion.id) ? '★ Bookmarked' : '☆ Bookmark'}
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {[currentQuestion.optionA, currentQuestion.optionB, currentQuestion.optionC, currentQuestion.optionD].map((option, i) => {
+                                            const isSelected = answers[currentQuestion.id] === optionLabels[i];
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    onClick={async () => {
+                                                        if (!document.fullscreenElement) {
+                                                            try { await enterFullscreen(); } catch (e) { console.log(e); }
+                                                        }
+                                                        handleOptionSelect(currentQuestion.id, optionLabels[i]);
+                                                    }}
+                                                    className="w-full text-left flex items-center gap-4 transition-all duration-200"
+                                                    style={{
+                                                        padding: '14px 18px',
+                                                        borderRadius: '16px',
+                                                        border: isSelected
+                                                            ? '2px solid rgba(168,85,247,0.7)'
+                                                            : '2px solid rgba(255,255,255,0.07)',
+                                                        background: isSelected
+                                                            ? 'linear-gradient(135deg,rgba(124,58,237,0.25),rgba(168,85,247,0.15))'
+                                                            : 'rgba(255,255,255,0.03)',
+                                                        boxShadow: isSelected
+                                                            ? '0 0 20px rgba(124,58,237,0.25),inset 0 1px 0 rgba(255,255,255,0.06)'
+                                                            : 'none',
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        if (!isSelected) {
+                                                            e.currentTarget.style.border = '2px solid rgba(168,85,247,0.3)';
+                                                            e.currentTarget.style.background = 'linear-gradient(135deg,rgba(124,58,237,0.16),rgba(168,85,247,0.08))';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        if (!isSelected) {
+                                                            e.currentTarget.style.border = '2px solid rgba(255,255,255,0.07)';
+                                                            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                                                        }
+                                                    }}
+                                                >
+                                                    <div
+                                                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                                                        style={{
+                                                            background: isSelected
+                                                                ? 'linear-gradient(135deg,#7c3aed,#a855f7)'
+                                                                : 'rgba(255,255,255,0.07)',
+                                                            color: isSelected ? '#fff' : 'rgba(196,181,253,0.7)',
+                                                            border: isSelected
+                                                                ? '1px solid rgba(216,180,254,0.4)'
+                                                                : '1px solid rgba(255,255,255,0.1)',
+                                                            boxShadow: isSelected ? '0 0 10px rgba(124,58,237,0.5)' : 'none',
+                                                        }}
+                                                    >
+                                                        {optionLabels[i]}
+                                                    </div>
+                                                    <span
+                                                        className="font-medium"
+                                                        style={{color: isSelected ? 'rgba(243,232,255,0.95)' : 'rgba(196,181,253,0.8)'}}
+                                                    >
+                                                        {option}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Navigation */}
+                                    <div className="flex items-center justify-between mt-10">
+                                        <button
+                                            onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
+                                            disabled={currentQuestionIndex === 0}
+                                            className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                            style={{
+                                                background: 'rgba(255,255,255,0.06)',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                color: 'rgba(196,181,253,0.8)',
+                                            }}
+                                            onMouseEnter={e => { if (currentQuestionIndex !== 0) e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.06)'; }}
+                                        >
+                                            ← Previous
+                                        </button>
+
+                                        {currentQuestionIndex === questions.length - 1 ? (
+                                            <button
+                                                onClick={() => setShowSubmitConfirm(true)}
+                                                className="premium-btn-primary px-8 py-3 text-sm font-bold"
+                                            >
+                                                Submit Exam
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={async () => {
+                                                    if (!document.fullscreenElement) {
+                                                        try { await enterFullscreen(); } catch (e) { console.log(e); }
+                                                    }
+                                                    setCurrentQuestionIndex(currentQuestionIndex + 1);
+                                                }}
+                                                className="premium-btn-primary px-6 py-3 text-sm font-semibold"
+                                            >
+                                                Next →
+                                            </button>
+                                        )}
+                                    </div>
+
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1364,6 +2356,29 @@ className={`w-11 h-11 rounded-xl text-sm font-bold transition-all duration-200 $
                 )}
 
             </div>
+
+            {/* Floating sticky timer — appears when warning/critical during active exam */}
+            {examStarted && !submitted && !alreadyAttempted && timerUrgency !== 'normal' && (
+                <div
+                    className={`exam-float-timer${timerUrgency === 'critical' ? ' exam-float-timer-critical' : ' exam-float-timer-warning'}`}
+                    style={{
+                        background: tc.bg,
+                        boxShadow: `0 0 28px ${tc.glow}, 0 8px 32px rgba(0,0,0,0.5)`,
+                        border: `1px solid ${tc.border}`,
+                    }}
+                >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{color: tc.text, flexShrink:0}}>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span style={{color: tc.text, fontWeight:800, fontSize:'15px', fontVariantNumeric:'tabular-nums', letterSpacing:'0.5px'}}>
+                        {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+                    </span>
+                    <span style={{color: tc.text, fontSize:'10px', fontWeight:700, opacity:0.8, textTransform:'uppercase', letterSpacing:'0.5px'}}>
+                        {timerUrgency === 'critical' ? 'Critical' : 'Low Time'}
+                    </span>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={showSubmitConfirm}

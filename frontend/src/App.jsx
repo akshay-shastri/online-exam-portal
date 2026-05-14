@@ -17,6 +17,10 @@ import HistoryPage from "./pages/HistoryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import useTheme from "./hooks/useTheme";
 import VerifyOtp from "./pages/VerifyOtp";
+import ReviewAnswersPage from "./pages/ReviewAnswersPage";
+import LiveMonitoringPage
+from "./pages/LiveMonitoringPage";
+
 
 function App() {
   // Ensure theme class is initialized globally so Tailwind `dark:` variants work across pages
@@ -26,57 +30,27 @@ function App() {
 
     <BrowserRouter>
 
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            borderRadius: "12px",
-            fontWeight: "500",
-            fontSize: "14px",
-          },
-        }}
-      />
+      <Toaster position="top-right" toastOptions={{ duration: 3000,
+          style: { borderRadius: "12px", fontWeight: "500", fontSize: "14px",},}} />
 
       <Routes>
 
         <Route path="/" element={<Login />} />
 
-        <Route path="/leaderboard" element={ <ProtectedRoute allowedRole="STUDENT"> <Leaderboard />
-    </ProtectedRoute>
-  }
-/>
+        <Route path="/leaderboard" element={ <ProtectedRoute allowedRole="STUDENT"> <Leaderboard /></ProtectedRoute>}/>
 
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/student-dashboard"
-          element={
-            <ProtectedRoute allowedRole="STUDENT">
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route          path="/student-dashboard"          element={        <ProtectedRoute allowedRole="STUDENT">             <StudentDashboard />            </ProtectedRoute>}/>
 
-        <Route
-          path="/admin-dashboard"
-          element={
-            <ProtectedRoute allowedRole="ADMIN">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route    path="/admin-dashboard"         element={ <ProtectedRoute allowedRole="ADMIN">           <AdminDashboard />      </ProtectedRoute>  }   />
 
         <Route
           path="/admin/create-exam"
           element={
-            <ProtectedRoute allowedRole="ADMIN">
-              <CreateExam />
-            </ProtectedRoute>
-          }
-        />
+            <ProtectedRoute allowedRole="ADMIN">  <CreateExam /> </ProtectedRoute> } />
 
         <Route
           path="/admin/exam/:id"
@@ -96,7 +70,8 @@ function App() {
           }
         />
 
-        <Route          path="/admin/exam/:id/activity"
+        <Route          
+        path="/admin/exam/:id/activity"
           element={
             <ProtectedRoute allowedRole="ADMIN">
               <ExamActivity />
@@ -139,19 +114,13 @@ function App() {
           }
         />
 
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute allowedRole="STUDENT">
-              <HistoryPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/history"element={<ProtectedRoute allowedRole="STUDENT"> <HistoryPage /> </ProtectedRoute>          }/>
 
-        <Route
-    path="/verify-otp"
-    element={<VerifyOtp />}
-/>
+        <Route path="/review/:examId" element={ <ProtectedRoute allowedRole="STUDENT"> <ReviewAnswersPage /></ProtectedRoute>}/>
+
+        <Route path="/verify-otp" element={<VerifyOtp />}/>
+
+        <Route path="/admin/exam/:id/live-monitor" element={<LiveMonitoringPage />}/>
 
       </Routes>
 

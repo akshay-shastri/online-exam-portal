@@ -34,6 +34,17 @@ public class Result {
     private String endFaceImage;
 
     private LocalDateTime submittedAt;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String questionsJson;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String answersJson;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String violationTimelineJson;
 
     public Result() {
     }
@@ -116,5 +127,36 @@ public class Result {
 
     public void setEndFaceImage(String endFaceImage) {
         this.endFaceImage = endFaceImage;
+    }
+
+
+    public String getQuestionsJson() {
+    return questionsJson;
+}
+
+    public void setQuestionsJson(
+            String questionsJson
+    ) {
+        this.questionsJson = questionsJson;
+    }
+
+    public String getAnswersJson() {
+        return answersJson;
+    }
+
+    public void setAnswersJson(
+            String answersJson
+    ) {
+        this.answersJson = answersJson;
+    }
+
+    public String getViolationTimelineJson() {
+    return violationTimelineJson;
+}
+
+    public void setViolationTimelineJson(
+            String violationTimelineJson
+    ) {
+        this.violationTimelineJson = violationTimelineJson;
     }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
@@ -46,7 +46,42 @@ function AdminDashboard() {
 
     const [violations, setViolations] = useState([]);
 
-    const [results,setResults] = useState([]);
+    const [results, setResults] = useState([]);
+
+    const [liveSessions, setLiveSessions] = useState([]);
+
+    // ── Analytics derived values (UI only) ──
+    const activeStudents = liveSessions.filter(s => s.status === 'ACTIVE').length;
+    const avgScore = results.length > 0
+        ? parseFloat((results.reduce((sum, r) => sum + (r.percentage || 0), 0) / results.length).toFixed(1))
+        : 0;
+
+    // ── Animated counter (RAF ease-out cubic) ──
+    const useAnimatedCounter = (target, duration = 1100) => {
+        const [display, setDisplay] = useState(0);
+        const rafRef = useRef(null);
+        useEffect(() => {
+            const start = performance.now();
+            const animate = (now) => {
+                const p = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                const isFloat = target % 1 !== 0;
+                setDisplay(isFloat
+                    ? parseFloat((target * eased).toFixed(1))
+                    : Math.round(target * eased)
+                );
+                if (p < 1) rafRef.current = requestAnimationFrame(animate);
+            };
+            rafRef.current = requestAnimationFrame(animate);
+            return () => cancelAnimationFrame(rafRef.current);
+        }, [target, duration]);
+        return display;
+    };
+
+    const animExams      = useAnimatedCounter(exams.length);
+    const animActive     = useAnimatedCounter(activeStudents);
+    const animViolations = useAnimatedCounter(violations.length);
+    const animAvgScore   = useAnimatedCounter(avgScore);
 
     const [showDropdown, setShowDropdown] = useState(false);
     const [loadingQuestion, setLoadingQuestion] = useState(false);
@@ -63,10 +98,14 @@ function AdminDashboard() {
 
     fetchResults();
 
-    
+    fetchLiveSessions();
 
 }, []);
 
+useEffect(() => {
+    const interval = setInterval(() => { fetchLiveSessions(); }, 5000);
+    return () => clearInterval(interval);
+}, []);
 
 
     const fetchExams = async () => {
@@ -98,8 +137,7 @@ const fetchViolations = async () => {
     }
 };
 
-const fetchResults =
-    async () => {
+const fetchResults = async () => {
 
     try {
 
@@ -116,6 +154,15 @@ const fetchResults =
 
     } catch (error) {
 
+        console.log(error);
+    }
+};
+
+const fetchLiveSessions = async () => {
+    try {
+        const response = await API.get("/monitor/live");
+        setLiveSessions(response.data || []);
+    } catch (error) {
         console.log(error);
     }
 };
@@ -439,12 +486,103 @@ const updateQuestion = async () => {
                         <h2 className="hero-title">Welcome back, {name} 👋</h2>
                         <p className="hero-sub">Manage your exams, questions, and monitor student activity from one place.</p>
                     </div>
-                    <div className="absolute right-8 bottom-6 hidden md:flex items-center gap-4" style={{zIndex:10}}>
-                        <div style={{background:'rgba(124,58,237,0.15)',backdropFilter:'blur(8px)',borderRadius:'16px',padding:'12px 20px',textAlign:'center',border:'1px solid rgba(167,139,250,0.15)'}}>
-                            <p style={{fontSize:'24px',fontWeight:800,color:'#fff'}}>{exams.length}</p>
-                            <p style={{color:'rgba(196,181,253,0.7)',fontSize:'12px',marginTop:'2px'}}>Total Exams</p>
+                </div>
+
+                {/* Analytics Summary Cards */}
+                <div className="ad-analytics-grid mb-10">
+
+                    {/* Total Exams */}
+                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(124,58,237,0.45)','--ad-border':'rgba(124,58,237,0.22)'}}>
+                        <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#7c3aed,#a855f7)'}} />
+                        <div className="p-6">
+                            <div className="flex items-start justify-between mb-5">
+                                <div className="ad-stat-icon" style={{background:'rgba(124,58,237,0.18)',border:'1px solid rgba(124,58,237,0.3)',boxShadow:'0 0 18px rgba(124,58,237,0.25)'}}>
+                                    <svg width="18" height="18" fill="none" stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <span className="ad-stat-trend" style={{color:'#c4b5fd',background:'rgba(124,58,237,0.12)',border:'1px solid rgba(124,58,237,0.2)'}}>
+                                    Total
+                                </span>
+                            </div>
+                            <p className="ad-stat-value" style={{color:'#e9d5ff'}}>{animExams}</p>
+                            <p className="ad-stat-label">Total Exams</p>
+                            <div className="ad-stat-bar-track">
+                                <div className="ad-stat-bar-fill" style={{width:'100%',background:'linear-gradient(90deg,#7c3aed,#a855f7)'}} />
+                            </div>
                         </div>
                     </div>
+
+                    {/* Active Students */}
+                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(34,197,94,0.4)','--ad-border':'rgba(34,197,94,0.2)'}}>
+                        <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#16a34a,#22c55e)'}} />
+                        <div className="p-6">
+                            <div className="flex items-start justify-between mb-5">
+                                <div className="ad-stat-icon" style={{background:'rgba(34,197,94,0.12)',border:'1px solid rgba(34,197,94,0.25)',boxShadow:'0 0 18px rgba(34,197,94,0.2)'}}>
+                                    <svg width="18" height="18" fill="none" stroke="#86efac" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                </div>
+                                <span className="ad-stat-trend" style={{color:'#86efac',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.2)'}}>
+                                    {activeStudents > 0 ? 'Live' : 'Idle'}
+                                </span>
+                            </div>
+                            <p className="ad-stat-value" style={{color:'#86efac'}}>{animActive}</p>
+                            <p className="ad-stat-label">Active Students</p>
+                            <div className="ad-stat-bar-track">
+                                <div className="ad-stat-bar-fill" style={{width: exams.length > 0 ? `${Math.min((activeStudents / Math.max(exams.length, 1)) * 100, 100)}%` : '0%', background:'linear-gradient(90deg,#16a34a,#22c55e)'}} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Total Violations */}
+                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(239,68,68,0.4)','--ad-border':'rgba(239,68,68,0.2)'}}>
+                        <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#dc2626,#ef4444)'}} />
+                        <div className="p-6">
+                            <div className="flex items-start justify-between mb-5">
+                                <div className="ad-stat-icon" style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.22)',boxShadow:'0 0 18px rgba(239,68,68,0.18)'}}>
+                                    <svg width="18" height="18" fill="none" stroke="#fca5a5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                        <line x1="12" y1="9" x2="12" y2="13" />
+                                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                                    </svg>
+                                </div>
+                                <span className="ad-stat-trend" style={{color:'#fca5a5',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.2)'}}>
+                                    {violations.length === 0 ? 'Clean' : 'Flagged'}
+                                </span>
+                            </div>
+                            <p className="ad-stat-value" style={{color:'#fca5a5'}}>{animViolations}</p>
+                            <p className="ad-stat-label">Total Violations</p>
+                            <div className="ad-stat-bar-track">
+                                <div className="ad-stat-bar-fill" style={{width: violations.length > 0 ? '100%' : '0%', background:'linear-gradient(90deg,#dc2626,#ef4444)'}} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Average Score */}
+                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(6,182,212,0.4)','--ad-border':'rgba(6,182,212,0.2)'}}>
+                        <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#0891b2,#06b6d4)'}} />
+                        <div className="p-6">
+                            <div className="flex items-start justify-between mb-5">
+                                <div className="ad-stat-icon" style={{background:'rgba(6,182,212,0.1)',border:'1px solid rgba(6,182,212,0.22)',boxShadow:'0 0 18px rgba(6,182,212,0.18)'}}>
+                                    <svg width="18" height="18" fill="none" stroke="#67e8f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                    </svg>
+                                </div>
+                                <span className="ad-stat-trend" style={{color:'#67e8f9',background:'rgba(6,182,212,0.1)',border:'1px solid rgba(6,182,212,0.2)'}}>
+                                    {results.length} Results
+                                </span>
+                            </div>
+                            <p className="ad-stat-value" style={{color:'#67e8f9'}}>{animAvgScore}<span style={{fontSize:'18px',fontWeight:600,opacity:0.7}}>%</span></p>
+                            <p className="ad-stat-label">Average Score</p>
+                            <div className="ad-stat-bar-track">
+                                <div className="ad-stat-bar-fill" style={{width:`${avgScore}%`,background:'linear-gradient(90deg,#0891b2,#06b6d4)'}} />
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {/* Exams List */}

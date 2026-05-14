@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -20,11 +20,28 @@ function ResultPage() {
     const studentName = localStorage.getItem("name") || "Student";
     const examTitle = location.state?.examTitle || "Exam";
     const timeTaken = location.state?.timeTaken || "5 min";
-    const reviewQuestions = location.state?.questions || [];
-    const reviewAnswers = location.state?.answers || {};
     const violations = location.state?.violations || 0;
 
-    const [showReview, setShowReview] = useState(false);
+    // ── Animated ring ──
+    const [animatedPct, setAnimatedPct] = useState(0);
+    useEffect(() => {
+        const raf = requestAnimationFrame(() => {
+            setTimeout(() => setAnimatedPct(parseFloat(percentage)), 120);
+        });
+        return () => cancelAnimationFrame(raf);
+    }, [percentage]);
+
+    const ringR          = 50;
+    const ringCirc       = 2 * Math.PI * ringR;
+    const safePct = animatedPct === 0 ? 1 : animatedPct;
+    const ringOffset = ringCirc - (safePct / 100) * ringCirc;
+
+    // Performance label (requirement: 90+ Excellent, 75+ Very Good, 50+ Good, <50 Needs Improvement)
+    let perfLabel, perfLabelColor;
+    if      (percentage >= 90) { perfLabel = 'Excellent';          perfLabelColor = 'rgba(52,211,153,0.95)';  }
+    else if (percentage >= 75) { perfLabel = 'Very Good';          perfLabelColor = 'rgba(96,165,250,0.95)';  }
+    else if (percentage >= 50) { perfLabel = 'Good';               perfLabelColor = 'rgba(251,191,36,0.95)';  }
+    else                       { perfLabel = 'Needs Improvement';  perfLabelColor = 'rgba(252,165,165,0.9)';  }
 
     let performanceTitle = "";
     let performanceMessage = "";
@@ -210,35 +227,98 @@ function ResultPage() {
                     <div className="rp-card-body">
 
                         {/* Score Ring */}
-                        <div className="rp-ring-wrap">
-                            <svg className="rp-ring-svg" viewBox="0 0 120 120">
-                                <circle cx="60" cy="60" r="50" fill="none"
-                                    stroke={passed ? "rgba(99,102,241,0.12)" : "rgba(239,68,68,0.12)"}
-                                    strokeWidth="10" />
-                                <circle cx="60" cy="60" r="50" fill="none"
-                                    stroke={passed ? "url(#rpPassGrad)" : "url(#rpFailGrad)"}
-                                    strokeWidth="11"
-                                    strokeLinecap="round"
-                                    strokeDasharray={2 * Math.PI * 50}
-                                    strokeDashoffset={2 * Math.PI * 50 - (percentage / 100) * (2 * Math.PI * 50)}
-                                    style={{ transition: "stroke-dashoffset 1s ease" }}
-                                />
+                        <div className="rp-ring-wrap rp-ring-entrance">
+
+                            {/* Outer glow layer */}
+                            <div
+                                className="rp-ring-glow-pulse"
+                                style={{
+                                    background: passed
+                                        ? 'radial-gradient(circle, rgba(124,58,237,0.28) 0%, transparent 70%)'
+                                        : 'radial-gradient(circle, rgba(239,68,68,0.22) 0%, transparent 70%)'
+                                }}
+                            />
+
+                            <svg
+                                className="rp-ring-svg"
+                                viewBox="0 0 120 120"
+                                style={{
+                                    filter: passed
+                                        ? 'drop-shadow(0 0 14px rgba(124,58,237,0.55)) drop-shadow(0 0 28px rgba(168,85,247,0.3))'
+                                        : 'drop-shadow(0 0 14px rgba(239,68,68,0.5)) drop-shadow(0 0 28px rgba(244,63,94,0.25))'
+                                }}
+                            >
                                 <defs>
-                                    <linearGradient id="rpPassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#4f46e5" />
+                                    <linearGradient id="rpPassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%"   stopColor="#4f46e5" />
+                                        <stop offset="50%"  stopColor="#7c3aed" />
                                         <stop offset="100%" stopColor="#a855f7" />
                                     </linearGradient>
-                                    <linearGradient id="rpFailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#ef4444" />
+                                    <linearGradient id="rpFailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%"   stopColor="#ef4444" />
                                         <stop offset="100%" stopColor="#f43f5e" />
                                     </linearGradient>
+                                    {/* Glow filter */}
+                                    <filter id="rpGlow">
+                                        <feGaussianBlur stdDeviation="2.5" result="blur" />
+                                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                    </filter>
                                 </defs>
+
+                                {/* Track ring */}
+                                <circle
+                                    cx="60" cy="60" r={ringR}
+                                    fill="none"
+                                    stroke={passed ? 'rgba(99,102,241,0.1)' : 'rgba(239,68,68,0.1)'}
+                                    strokeWidth="10"
+                                />
+
+                                {/* Soft glow duplicate (blurred) */}
+                                <circle
+                                    cx="60" cy="60" r={ringR}
+                                    fill="none"
+                                    stroke={passed ? 'url(#rpPassGrad)' : 'url(#rpFailGrad)'}
+                                    strokeWidth="14"
+                                    strokeLinecap="round"
+                                    strokeDasharray={ringCirc}
+                                    strokeDashoffset={ringOffset}
+                                    opacity="0.25"
+                                    filter="url(#rpGlow)"
+                                    style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)' }}
+                                />
+
+                                {/* Main progress ring */}
+                                <circle
+                                    cx="60" cy="60" r={ringR}
+                                    fill="none"
+                                    stroke={passed ? 'url(#rpPassGrad)' : 'url(#rpFailGrad)'}
+                                    strokeWidth="11"
+                                    strokeLinecap="round"
+                                    strokeDasharray={ringCirc}
+                                    strokeDashoffset={ringOffset}
+                                    style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)' }}
+                                />
                             </svg>
+
+                            {/* Center content */}
                             <div className="rp-ring-center">
-                                <span className={`rp-ring-pct ${passed ? "rp-ring-pct-pass" : "rp-ring-pct-fail"}`}>
+                                <span
+                                    className={`rp-ring-pct ${passed ? 'rp-ring-pct-pass' : 'rp-ring-pct-fail'}`}
+                                    style={{ transition: 'opacity 0.6s ease 0.3s', opacity: 1 }}
+                                >
                                     {percentage}%
                                 </span>
-                                <span className="rp-ring-label">Final Score</span>
+                                <span className="rp-ring-label">Score</span>
+                                <span
+                                    className="rp-ring-perf-label"
+                                    style={{
+                                        color: perfLabelColor,
+                                        transition: 'opacity 0.6s ease 0.6s',
+                                        opacity: 1,
+                                    }}
+                                >
+                                    {perfLabel}
+                                </span>
                             </div>
                         </div>
 
@@ -283,10 +363,6 @@ function ResultPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                             Back to Dashboard
-                        </button>
-
-                        <button onClick={() => setShowReview(!showReview)} className="rp-btn-review">
-                            {showReview ? "Hide Answer Review" : "Review Answers"}
                         </button>
 
                     </div>
@@ -376,52 +452,6 @@ function ResultPage() {
 
                 </div>
             </div>
-
-            {/* ── Answer Review ── */}
-            {showReview && (
-                <div className="rp-review-wrap">
-                    <div className="rp-review-header">
-                        <h3 className="rp-review-title">Answer Review</h3>
-                        <span className="rp-review-count">{reviewQuestions.length} Questions</span>
-                    </div>
-
-                    <div className="rp-review-list">
-                        {reviewQuestions.map((q, index) => {
-                            const selected = reviewAnswers[q.id];
-                            const correct = q.correctAnswer;
-                            return (
-                                <div key={q.id} className="rp-question-card">
-                                    <div className="rp-question-header">
-                                        <div className="rp-q-num">{index + 1}</div>
-                                        <h4 className="rp-q-text">{q.questionText}</h4>
-                                    </div>
-                                    <div className="rp-options-list">
-                                        {[q.optionA, q.optionB, q.optionC, q.optionD].map((option, i) => {
-                                            const optionKey = ["A", "B", "C", "D"][i];
-                                            const isCorrect = optionKey === correct;
-                                            const isSelected = optionKey === selected;
-                                            return (
-                                                <div key={i} className={`rp-option ${isCorrect ? "rp-option-correct" : isSelected ? "rp-option-wrong" : "rp-option-neutral"}`}>
-                                                    <div className="rp-option-left">
-                                                        <div className={`rp-option-key ${isCorrect ? "rp-key-correct" : isSelected ? "rp-key-wrong" : "rp-key-neutral"}`}>
-                                                            {optionKey}
-                                                        </div>
-                                                        <span className="rp-option-text">{option}</span>
-                                                    </div>
-                                                    <div className="rp-option-tag">
-                                                        {isCorrect && <span className="rp-tag-correct">Correct</span>}
-                                                        {!isCorrect && isSelected && <span className="rp-tag-wrong">Your Answer</span>}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
 
         </div>
     );

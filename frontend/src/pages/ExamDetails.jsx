@@ -79,7 +79,16 @@ function ExamDetails() {
             description: "View student rankings and scores",
             route: `/admin/exam/${id}/leaderboard`,
             color: "from-amber-500 to-orange-600"
+        },
+        {
+            id: "live-monitor",
+            icon: "🟢",
+            title: "Live Monitoring",
+            description: "Monitor active students in real-time",
+            route: `/admin/exam/${id}/live-monitor`,
+            color: "from-emerald-500 to-green-600"
         }
+
     ];
 
     if (loading) {

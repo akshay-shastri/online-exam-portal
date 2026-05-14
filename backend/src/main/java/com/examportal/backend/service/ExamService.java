@@ -29,19 +29,12 @@ public class ExamService {
 
     public Exam createExam(Exam exam) {
 
-    Exam savedExam =
-            examRepository.save(exam);
+    Exam savedExam = examRepository.save(exam);
 
-    List<User> users =
-            userRepository.findAll();
+    List<User> users = userRepository.findAll();
 
-    String formattedStartTime =
-            exam.getStartTime()
-                    .format(
-                            DateTimeFormatter.ofPattern(
-                                    "dd MMM yyyy hh:mm a"
-                            )
-                    );
+    String formattedStartTime = exam.getStartTime()
+                    .format(DateTimeFormatter.ofPattern(    "dd MMM yyyy hh:mm a") );
 
     for (User user : users) {
 

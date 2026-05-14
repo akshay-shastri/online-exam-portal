@@ -7,6 +7,16 @@
 		color-scheme: dark;
 	}
 
+	html {
+    background: #050816;
+}
+
+body {
+    background:
+        radial-gradient(circle at top, rgba(91, 33, 182, 0.18), transparent 34%),
+        linear-gradient(180deg, #050816 0%, #070b1d 100%);
+}
+
 	html,
 	body,
 	#root {
@@ -14,12 +24,10 @@
 	}
 
 	body {
-		margin: 0;
-		background:
-			radial-gradient(circle at top, rgba(91, 33, 182, 0.18), transparent 34%),
-			linear-gradient(180deg, #050816 0%, #070b1d 100%);
-		color: #f8fafc;
-	}
+	margin: 0;
+	background: radial-gradient(circle at top, rgba(91, 33, 182, 0.18), transparent 34%), linear-gradient(180deg, #050816 0%, #070b1d 100%);
+	color: #f8fafc;
+}
 
 	.dark .bg-white,
 	.dark .bg-white\/80,
