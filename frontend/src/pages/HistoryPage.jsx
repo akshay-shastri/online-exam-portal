@@ -6,6 +6,9 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import "../styles/dashboard.css";
 import PremiumLoader from "../components/PremiumLoader";
+import PremiumCertificate from "../components/PremiumCertificate";
+import ReactDOM from "react-dom/client";
+
 
 
 import {
@@ -117,6 +120,73 @@ function HistoryPage() {
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
         pdf.save("exam-history.pdf");
     };
+
+    const downloadCertificate = async (result) => {
+
+    const element = document.createElement("div");
+
+    element.style.position = "fixed";
+    element.style.left = "-9999px";
+    element.style.top = "0";
+
+    document.body.appendChild(element);
+
+    const root = ReactDOM.createRoot(element);
+
+    root.render(
+        <PremiumCertificate
+            result={result}
+            userName={name}
+        />
+    );
+
+    await new Promise(resolve =>
+    setTimeout(resolve, 300)
+    );
+
+    const canvas = await html2canvas(element.firstChild, {
+
+    scale: 3,
+
+    useCORS: true,
+
+    backgroundColor:null,
+
+    width: 1123,
+
+    height: 794,
+
+    windowWidth: 1123,
+
+    windowHeight: 794,
+});
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf =  new jsPDF("landscape", "mm", "a4");
+
+    const pdfWidth =  pdf.internal.pageSize.getWidth();
+
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    pdf.addImage(
+    imgData,
+    "PNG",
+    0,
+    0,
+    pdfWidth,
+    pdfHeight
+);
+
+    pdf.save(
+        `${result.examTitle}-certificate.pdf`
+    );
+
+    root.unmount();
+
+    document.body.removeChild(element);
+};
+  
 
     return (
         <div className="premium-root min-h-screen" onClick={() => showDropdown && setShowDropdown(false)}>
@@ -374,6 +444,12 @@ function HistoryPage() {
                                             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                             {formatDate(result.submittedAt)}
                                         </div>
+
+                                        {passed && (
+                                            <button onClick={() => downloadCertificate(result)} className="premium-btn-primary w-full mt-4" >
+                                                🏆 Download Certificate
+                                            </button>
+                                         )}
 
                                     </div>
                                 </div>

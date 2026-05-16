@@ -2351,28 +2351,6 @@ className={`exam-timer-pill text-sm sm:text-base ${
 
             </div>
 
-            {/* Floating sticky timer — appears when warning/critical during active exam */}
-            {examStarted && !submitted && !alreadyAttempted && timerUrgency !== 'normal' && (
-                <div
-                    className={`exam-float-timer${timerUrgency === 'critical' ? ' exam-float-timer-critical' : ' exam-float-timer-warning'}`}
-                    style={{
-                        background: tc.bg,
-                        boxShadow: `0 0 28px ${tc.glow}, 0 8px 32px rgba(0,0,0,0.5)`,
-                        border: `1px solid ${tc.border}`,
-                    }}
-                >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{color: tc.text, flexShrink:0}}>
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span style={{color: tc.text, fontWeight:800, fontSize:'15px', fontVariantNumeric:'tabular-nums', letterSpacing:'0.5px'}}>
-                        {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
-                    </span>
-                    <span style={{color: tc.text, fontSize:'10px', fontWeight:700, opacity:0.8, textTransform:'uppercase', letterSpacing:'0.5px'}}>
-                        {timerUrgency === 'critical' ? 'Critical' : 'Low Time'}
-                    </span>
-                </div>
-            )}
 
             <ConfirmModal
                 isOpen={showSubmitConfirm}
