@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "../styles/dashboard.css";
-import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function ReviewAnswersPage() {
 
