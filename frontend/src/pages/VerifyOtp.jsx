@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function VerifyOtp() {
 
@@ -65,6 +66,19 @@ function VerifyOtp() {
 
     return (
         <div className="vo-root">
+            {loading && (
+
+    <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm">
+
+        <PremiumLoader
+            title="Verifying OTP..."
+            subtitle="Securing and validating your email verification request."
+            height="100vh"
+        />
+
+    </div>
+
+)}
 
             {/* Background blobs */}
             <div className="vo-blob vo-blob-tr" />

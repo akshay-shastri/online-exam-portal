@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function ExamDetails() {
     const navigate = useNavigate();
@@ -92,14 +93,15 @@ function ExamDetails() {
     ];
 
     if (loading) {
-        return (
-            <div className="premium-root min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 rounded-full border-4 border-purple-400/30 border-t-purple-400 animate-spin mx-auto mb-4" />
-                    <p style={{ color: 'rgba(196,181,253,0.7)' }}>Loading exam details...</p>
-                </div>
-            </div>
-        );
+       return (
+
+    <PremiumLoader
+        title="Loading Exam Details..."
+        subtitle="Preparing examination analytics and controls."
+        height="100vh"
+    />
+
+);
     }
 
     if (!exam) {
@@ -131,8 +133,8 @@ function ExamDetails() {
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate("/admin-dashboard")} className="text-white/80 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        ← Back to Dashboard
+                    <button onClick={() => navigate("/admin-dashboard")} className="premium-back-btn">
+                        ← Back
                     </button>
 
                     <button

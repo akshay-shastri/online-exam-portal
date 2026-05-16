@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
+import PremiumLoader from "../components/PremiumLoader";
 
 function Register() {
 
@@ -31,7 +32,19 @@ function Register() {
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden bg-[#0b0b0f]">
+                {loading && (
 
+    <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm">
+
+        <PremiumLoader
+            title="Creating Your Account..."
+            subtitle="Securing your profile and preparing verification."
+            height="100vh"
+        />
+
+    </div>
+
+)}
             {/* Background gradient blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-violet-900/30 blur-[120px]" />

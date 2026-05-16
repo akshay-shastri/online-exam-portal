@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function ExamFaceLogs() {
     const navigate = useNavigate();
@@ -80,14 +81,15 @@ function ExamFaceLogs() {
     };
 
     if (loading) {
-        return (
-            <div className="premium-root min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 rounded-full border-4 border-purple-400/30 border-t-purple-400 animate-spin mx-auto mb-4" />
-                    <p style={{ color: 'rgba(196,181,253,0.7)' }}>Loading face verification logs...</p>
-                </div>
-            </div>
-        );
+       return (
+
+    <PremiumLoader
+        title="Loading Activity Data..."
+        subtitle="Fetching student violations and monitoring analytics."
+        height="100vh"
+    />
+
+);
     }
 
     if (!exam) {
@@ -119,8 +121,8 @@ function ExamFaceLogs() {
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="text-white/80 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        ← Back to Exam
+                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-back-btn">
+                        ← Back
                     </button>
 
                     <button
@@ -161,17 +163,17 @@ function ExamFaceLogs() {
                     </div>
 
                     <div className="flex flex-wrap gap-6 mt-8 items-start">
-                        <div style={{ background: 'rgba(124,58,237,0.15)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(167,139,250,0.15)' }}>
+                        <div style={{ background: 'rgba(124,58,237,0.15)', backdropFilter: 'blur(14px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(167,139,250,0.15)' }}>
                             <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Exam ID</p>
                             <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>#{exam.id}</p>
                         </div>
 
-                        <div style={{ background: 'rgba(59,130,246,0.15)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(59,130,246,0.15)' }}>
+                        <div style={{ background: 'rgba(59,130,246,0.15)', backdropFilter: 'blur(14px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(59,130,246,0.15)' }}>
                             <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Face Logs</p>
                             <p style={{ color: '#93c5fd', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{filteredLogs.length}</p>
                         </div>
 
-                        <div style={{ background: 'rgba(34,197,94,0.15)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(34,197,94,0.15)' }}>
+                        <div style={{ background: 'rgba(34,197,94,0.15)', backdropFilter: 'blur(14px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(34,197,94,0.15)' }}>
                             <p style={{ color: 'rgba(74,222,128,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Verified</p>
                             <p style={{ color: '#86efac', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>
                                 {filteredLogs.filter(l => l.startFaceImage && l.endFaceImage).length}
@@ -198,20 +200,13 @@ function ExamFaceLogs() {
                             return (
                                 <div
                                     key={log.id || index}
-                                    className="rounded-2xl p-6 transition-all duration-300"
+                                    className="premium-data-card rounded-2xl p-6"
                                     style={{
                                         background: 'linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)',
                                         border: '1px solid rgba(255,255,255,0.07)',
                                         boxShadow: '0 4px 24px rgba(0,0,0,0.35)'
                                     }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.boxShadow = '0 12px 48px rgba(124,58,237,0.25)';
-                                        e.currentTarget.style.borderColor = 'rgba(167,139,250,0.3)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.35)';
-                                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
-                                    }}
+                                
                                 >
                                     {/* Header */}
                                     <div className="flex items-center justify-between mb-6 pb-6 border-b border-white/10">
@@ -330,18 +325,18 @@ function ExamFaceLogs() {
                 {expandedImage && (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                        style={{ background: 'rgba(0,0,0,0.8)' }}
+                        style={{ background: 'rgba(2,6,23,0.88)' }}
                         onClick={() => setExpandedImage(null)}
                     >
                         <div
-                            className="rounded-2xl overflow-hidden max-w-2xl w-full"
+                            className="rounded-[28px] overflow-hidden max-w-3xl w-full premium-data-card"
                             onClick={(e) => e.stopPropagation()}
                             style={{
                                 border: '1px solid rgba(167,139,250,0.3)',
                                 boxShadow: '0 24px 96px rgba(124,58,237,0.3)'
                             }}
                         >
-                            <img src={expandedImage} alt="Expanded Face Snapshot" className="w-full h-auto" />
+                            <img src={expandedImage} alt="Expanded Face Snapshot" className="w-full h-auto object-cover transition-transform duration-500 hover:scale-[1.02]" />
                             <div className="text-center py-4" style={{ background: 'rgba(7,7,13,0.9)', borderTop: '1px solid rgba(167,139,250,0.2)' }}>
                                 <button
                                     onClick={() => setExpandedImage(null)}

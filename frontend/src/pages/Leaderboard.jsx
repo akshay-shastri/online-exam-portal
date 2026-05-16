@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function Leaderboard() {
 
@@ -62,7 +63,19 @@ function Leaderboard() {
                 </button>
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-4xl mx-auto">
+            {loading && (
+
+    <PremiumLoader
+        title="Loading Leaderboard..."
+        subtitle="Preparing student rankings and performance statistics."
+        height="70vh"
+    />
+
+)}
+
+            {!loading && (
+
+                    <div className="px-6 md:px-12 py-10 max-w-4xl mx-auto">
 
                 {/* ── Hero ── */}
                 <div className="lb-hero mb-10">
@@ -85,12 +98,15 @@ function Leaderboard() {
                 </div>
 
                 {/* ── Loading ── */}
-                {loading && (
-                    <div className="lb-loading">
-                        <div className="lb-spinner" />
-                        <p className="lb-loading-text">Loading leaderboard...</p>
-                    </div>
-                )}
+               {loading && (
+
+    <PremiumLoader
+        title="Loading Leaderboard..."
+        subtitle="Preparing student rankings and performance statistics."
+        height="70vh"
+    />
+
+)}
 
                 {/* ── Podium — Top 3 ── */}
                 {!loading && topThree.length > 0 && (
@@ -182,25 +198,35 @@ function Leaderboard() {
                 {/* ── Empty state ── */}
                 {!loading && leaders.length === 0 && (
                     <div className="lb-empty-card">
-                        <div className="lb-empty-icon-wrap">
-                            <span className="lb-empty-trophy">🏆</span>
+                        <div className="lb-empty-icon-wrap premium-empty-icon">
+                            <div className="text-6xl">🏆 </div>
                         </div>
                         <h3 className="lb-empty-title">No Rankings Yet</h3>
                         <p className="lb-empty-sub">
                             Complete exams to appear on the leaderboard and compete with other students.
                         </p>
+
+                        <button
+    onClick={() => navigate("/student-dashboard")}
+    className="premium-btn-primary mt-6"
+>
+    Browse Exams
+</button>
+
+
                     </div>
                 )}
 
                 {/* ── Back button ── */}
-                <button onClick={() => navigate("/student-dashboard")} className="lb-btn-back">
+                <button onClick={() => navigate("/student-dashboard")} className="premium-back-btn">
                     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Back to Dashboard
+                    Back
                 </button>
 
             </div>
+            )}
         </div>
     );
 }

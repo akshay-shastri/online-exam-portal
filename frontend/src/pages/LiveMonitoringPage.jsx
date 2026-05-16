@@ -1,33 +1,27 @@
 import { useEffect, useState } from "react";
-
-import { useNavigate, useParams }
-from "react-router-dom";
-
+import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
-
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function LiveMonitoringPage() {
 
     const navigate = useNavigate();
-
     const { id } = useParams();
-
-    const [sessions, setSessions] =
-        useState([]);
-
-    const [exam, setExam] =
-        useState(null);
-
+    const [sessions, setSessions] = useState([]);
+    const [exam, setExam] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const name = localStorage.getItem("name");
+    const firstLetter = name ? name.charAt(0).toUpperCase() : "A";
     const fetchData = async () => {
 
         try {
+            setLoading(true);
 
-            const examResponse =
-                await API.get("/exams");
+            const examResponse = await API.get("/exams");
 
-            const foundExam =
-                examResponse.data.find(
+            const foundExam = examResponse.data.find(
                     e =>
                         e.id ===
                         parseInt(id)
@@ -36,23 +30,21 @@ function LiveMonitoringPage() {
             setExam(foundExam);
 
             const response =
-                await API.get(
-                    "/monitor/live"
-                );
+                await API.get( "/monitor/live" );
 
-            const filtered =
-                response.data.filter(
-                    s =>
-                        s.examTitle ===
-                        foundExam?.title
-                );
+            const filtered = response.data.filter( s => s.examTitle === foundExam?.title );
 
             setSessions(filtered);
+            setLoading(false);
 
         } catch (error) {
 
-            console.log(error);
-        }
+    console.log(error);
+
+} finally {
+
+    setLoading(false);
+}
     };
 
     useEffect(() => {
@@ -71,14 +63,145 @@ function LiveMonitoringPage() {
 
     }, [id]);
 
+    const logout = () => {
+    setShowDropdown(false);
+    localStorage.clear();
+    navigate("/login"); 
+    };
+
     return (
 
         <div className="premium-root min-h-screen">
 
             <div className="ambient-blob blob-a" />
             <div className="ambient-blob blob-b" />
+            <nav className="premium-navbar mx-6 md:mx-12">
 
-            <div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
+    <div className="navbar-logo">
+
+        <div className="logo-mark">
+
+            <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" />
+                <path d="M9 12l2 2 4-4" />
+            </svg>
+
+        </div>
+
+        <div>
+
+            <div className="logo-text-primary">
+                Smart Exam Portal
+            </div>
+
+            <div
+                style={{
+                    fontSize: "11px",
+                    color: "rgba(196,181,253,0.5)",
+                    letterSpacing: "0.3px"
+                }}
+            >
+                Admin Panel
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        className="relative flex items-center gap-2"
+        onClick={(e) => e.stopPropagation()}
+    >
+
+        <button
+            onClick={() => navigate(-1)}
+            className="premium-back-btn"
+        >
+            ← Back
+        </button>
+
+        <button
+            onClick={() =>
+                setShowDropdown(!showDropdown)
+            }
+            className="profile-btn"
+        >
+            {firstLetter}
+        </button>
+
+        {showDropdown && (
+
+            <div className="profile-dropdown animate-fade-in">
+
+                <div className="profile-top">
+
+                    <div className="profile-avatar">
+                        {firstLetter}
+                    </div>
+
+                    <div>
+
+                        <div className="profile-name">
+                            {name}
+                        </div>
+
+                        <div className="profile-role">
+                            Administrator • Online
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div className="dropdown-menu">
+
+                    <div className="dropdown-divider" />
+
+                    <div
+                        className="dropdown-item dropdown-item-danger"
+                        onClick={logout}
+                    >
+
+                        <div className="dropdown-item-icon">
+                            🚪
+                        </div>
+
+                        <span>Logout</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        )}
+
+    </div>
+
+</nav>
+
+            {loading && (
+
+    <PremiumLoader
+        title="Initializing Live Monitoring..."
+        subtitle="Connecting to active student sessions and AI proctoring feed."
+        height="75vh"
+    />
+
+)}
+
+            {!loading && (
+
+<div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
 
                 <div className="mb-10 glass-hero">
 
@@ -107,16 +230,6 @@ function LiveMonitoringPage() {
 
                 </div>
 
-                <button
-                    onClick={() =>
-                        navigate(-1)
-                    }
-                    className="premium-btn-primary px-5 py-2 text-sm mb-8"
-                >
-
-                    ← Back
-
-                </button>
 
                 {sessions.length === 0 ? (
 
@@ -305,6 +418,7 @@ function LiveMonitoringPage() {
                 )}
 
             </div>
+            )}
 
         </div>
     );

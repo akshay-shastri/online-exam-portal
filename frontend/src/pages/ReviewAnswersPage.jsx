@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "../styles/dashboard.css";
+import "../styles/dashboard.css";
 
 function ReviewAnswersPage() {
 
@@ -43,55 +44,13 @@ function ReviewAnswersPage() {
 
         return (
 
-            <div className="premium-root min-h-screen flex items-center justify-center p-6">
+    <PremiumLoader
+        title="Loading Answers..."
+        subtitle="Preparing answer review and analysis."
+        height="100vh"
+    />
 
-    <div
-        className="w-full max-w-xl rounded-3xl overflow-hidden"
-        style={{
-            background:
-                'linear-gradient(160deg,rgba(109,40,217,0.12) 0%,rgba(12,10,30,0.88) 100%)',
-            border:
-                '1px solid rgba(168,85,247,0.22)',
-            boxShadow:
-                '0 0 60px rgba(124,58,237,0.15)',
-            backdropFilter:'blur(20px)',
-        }}
-    >
-
-        <div
-            className="h-1"
-            style={{
-                background:
-                    'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)'
-            }}
-        />
-
-        <div className="p-10 text-center">
-
-            <div
-                className="w-16 h-16 rounded-2xl mx-auto mb-6 animate-spin"
-                style={{
-                    border:'3px solid rgba(168,85,247,0.15)',
-                    borderTop:'3px solid #a855f7',
-                }}
-            />
-
-            <h2 className="text-2xl font-bold text-white mb-2">
-                Loading Answers
-            </h2>
-
-            <p className="text-purple-200/70">
-                Preparing answer review...
-            </p>
-
-        </div>
-
-    </div>
-
-</div>
-
-            
-        );
+);
     }
 
    if (!reviewData) {
@@ -183,7 +142,7 @@ function ReviewAnswersPage() {
 
                     </div>
 
-                    <button onClick={() => navigate("/student-dashboard")}className="px-6 py-3 rounded-2xl font-bold text-white transition-all duration-300 hover:scale-105"
+                    <button onClick={() => navigate("/student-dashboard")}className="premium-back-btn"
                     style={{
     background:
         'linear-gradient(135deg,#7c3aed,#a855f7)',

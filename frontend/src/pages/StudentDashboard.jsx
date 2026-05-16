@@ -4,7 +4,7 @@ import API from "../services/api";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
 import "../styles/dashboard.css";
-
+import PremiumLoader from "../components/PremiumLoader";
 function StudentDashboard() {
 
     const navigate = useNavigate();
@@ -199,7 +199,7 @@ function StudentDashboard() {
             <div className="ambient-blob blob-b" />
 
             {/* Navbar */}
-            <nav className="premium-navbar mx-6 md:mx-12">
+           <nav className="premium-navbar mx-4 md:mx-12 flex-wrap gap-3">
                 <div className="navbar-logo">
                     <div className="logo-mark">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -220,7 +220,7 @@ function StudentDashboard() {
                 !showNotifications
             )
         }
-        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative ${
+        className={`premium-icon-hover w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 relative ${
             dark
                 ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
                 : "bg-blue-50 text-blue-600 hover:bg-blue-100"
@@ -243,7 +243,7 @@ function StudentDashboard() {
 
     {showNotifications && (
 
-        <div className={`absolute right-0 mt-3 w-80 rounded-2xl shadow-2xl border overflow-hidden z-50 ${
+        <div className={`absolute right-0 mt-3 w-[92vw] sm:w-80 rounded-2xl shadow-2xl border overflow-hidden z-50 ${
             dark
                 ? "bg-gray-900 border-gray-700"
                 : "bg-white border-gray-100"
@@ -310,7 +310,7 @@ function StudentDashboard() {
 
                     <button
                         onClick={() => setShowDropdown(!showDropdown)}
-                        className="profile-btn"
+                        className="profile-btn premium-icon-hover"
                     >
                         {firstLetter}
                     </button>
@@ -335,7 +335,7 @@ function StudentDashboard() {
                                 </div>
                                 <div className="dropdown-item" onClick={openModal}>
                                     <span>⚙️</span>
-                                    <span>Settings</span>
+                                    <span>Change Password</span>
                                 </div>
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item" onClick={logout}>
@@ -513,7 +513,7 @@ function StudentDashboard() {
                 <div className="mb-12 glass-hero relative overflow-hidden">
                     <div className="relative z-10">
                         <span className="hero-accent">Student Dashboard</span>
-                        <h2 className="hero-title mt-4">Welcome Back, {name}</h2>
+                        <h2 className="hero-title text-3xl sm:text-4xl">Welcome Back, {name}</h2>
                         <p className="hero-sub">Track exams, monitor performance, and continue your assessment journey.</p>
                     </div>
                 </div>
@@ -531,11 +531,13 @@ function StudentDashboard() {
 
                 {/* Loading state */}
                 {examsLoading && (
-                    <div className="flex flex-col items-center justify-center py-24">
-                        <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin mb-4" />
-                        <p className="text-sm text-gray-400 font-medium">Loading exams...</p>
-                    </div>
-                )}
+
+    <PremiumLoader
+        title="Loading Dashboard..."
+        subtitle="Fetching your examinations and activity."
+    />
+
+)}
 
                 {/* Error state */}
                 {!examsLoading && examsError && (
@@ -560,7 +562,7 @@ function StudentDashboard() {
                 {/* Exam Cards Grid */}
                 {!examsLoading && !examsError && (
                 <>
-                <div className="exam-grid">
+                <div className="exam-grid gap-5 sm:gap-7">
 
                     {exams.map((exam, index) => {
 
@@ -583,7 +585,7 @@ function StudentDashboard() {
                         }
 
                         return (
-                        <div key={exam.id} className="exam-card">
+                        <div key={exam.id} className="exam-card premium-hover-lift">
                             <div className="accent-strip" style={{background: index % 3 === 0 ? 'linear-gradient(90deg,#7c3aed,#d946ef)' : index % 3 === 1 ? 'linear-gradient(90deg,#9f7aea,#fb7185)' : 'linear-gradient(90deg,#06b6d4,#7c3aed)'}} />
                             <div className="p-5 flex flex-col gap-0">
 

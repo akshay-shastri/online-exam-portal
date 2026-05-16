@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function CreateExam() {
     const navigate = useNavigate();
@@ -85,6 +86,19 @@ function CreateExam() {
 
     return (
         <div className="premium-root min-h-screen" onClick={() => showDropdown && setShowDropdown(false)}>
+            {loading && (
+
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm">
+
+        <PremiumLoader
+            title="Creating Examination..."
+            subtitle="Configuring exam structure, rules, and assessment settings."
+            height="100vh"
+        />
+
+    </div>
+
+)}
             <div className="ambient-blob blob-a" />
             <div className="ambient-blob blob-b" />
 
@@ -101,8 +115,8 @@ function CreateExam() {
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate("/admin-dashboard")} className="text-white/80 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        ← Back to Dashboard
+                    <button onClick={() => navigate("/admin-dashboard")} className="premium-back-btn">
+                        ← Back
                     </button>
 
                     <button

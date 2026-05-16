@@ -82,12 +82,21 @@ function AdminDashboard() {
     const animActive     = useAnimatedCounter(activeStudents);
     const animViolations = useAnimatedCounter(violations.length);
     const animAvgScore   = useAnimatedCounter(avgScore);
-
     const [showDropdown, setShowDropdown] = useState(false);
     const [loadingQuestion, setLoadingQuestion] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [showModal, setShowModal] = useState(false); 
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [modalMessage, setModalMessage] = useState({ text: "",  type: "" });
+    const [showCurrent, setShowCurrent] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [loadingPassword, setLoadingPassword] = useState(false);
+    const email = localStorage.getItem("email");
 
 
     useEffect(() => {
@@ -427,7 +436,81 @@ const updateQuestion = async () => {
         setTimeout(() => navigate("/login"), 1000);
     };
 
-    const inputClass = "w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-all duration-200 hover:border-blue-300";
+     const openModal = () => {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setModalMessage({ text: "", type: "" });
+        setShowCurrent(false);
+        setShowNew(false);
+        setShowConfirm(false);
+        setShowDropdown(false);
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setModalMessage({ text: "", type: "" });
+    };
+
+     const handleChangePassword = async () => {
+
+        setModalMessage({ text: "", type: "" });
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setModalMessage({ text: "All fields are required.", type: "error" });
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            setModalMessage({ text: "New password and confirm password do not match.", type: "error" });
+            return;
+        }
+
+        setLoadingPassword(true);
+
+        try {
+            const response = await API.post("/auth/change-password", {
+                email,
+                currentPassword,
+                newPassword
+            });
+
+            const msg = response.data;
+
+            if (msg === "Password Changed Successfully") {
+                toast.success("Password changed successfully!");
+                closeModal();
+            } else {
+                setModalMessage({ text: msg, type: "error" });
+            }
+
+        } catch (error) {
+            toast.error("Something went wrong. Please try again.");
+        } finally {
+            setLoadingPassword(false);
+        }
+    };
+
+
+
+    const inputClass = "cp-input";
+
+     const EyeIcon = ({ show, toggle }) => (
+        <button type="button" onClick={toggle} className="cp-eye-btn">
+            {show ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+            ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            )}
+        </button>
+    );
+
 
     return (
 
@@ -437,7 +520,7 @@ const updateQuestion = async () => {
             <div className="ambient-blob blob-b" />
 
             {/* Navbar */}
-            <nav className="premium-navbar mx-6 md:mx-12">
+            <nav className="premium-navbar mx-4 md:mx-12 flex-wrap gap-3">
                 <div className="navbar-logo">
                     <div className="logo-mark">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -457,7 +540,7 @@ const updateQuestion = async () => {
                     </button>
 
                     {showDropdown && (
-                        <div className="profile-dropdown animate-fade-in">
+                        <div className="profile-dropdown animate-fade-in max-w-[92vw]">
                             <div className="profile-top">
                                 <div className="profile-avatar">{firstLetter}</div>
                                 <div>
@@ -466,6 +549,15 @@ const updateQuestion = async () => {
                                 </div>
                             </div>
                             <div className="dropdown-menu">
+                                <div className="dropdown-item" onClick={openModal}>
+
+    <div className="dropdown-item-icon">
+        ⚙️
+    </div>
+
+    <span>Change Password</span>
+
+</div>
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item dropdown-item-danger" onClick={logout}>
                                     <div className="dropdown-item-icon">🚪</div>
@@ -483,16 +575,16 @@ const updateQuestion = async () => {
                 <div className="mb-10 glass-hero">
                     <div className="relative z-10">
                         <span className="hero-accent">Admin Dashboard</span>
-                        <h2 className="hero-title">Welcome back, {name} 👋</h2>
+                        <h2 className="hero-title text-3xl sm:text-4xl">Welcome back, {name} 👋</h2>
                         <p className="hero-sub">Manage your exams, questions, and monitor student activity from one place.</p>
                     </div>
                 </div>
 
                 {/* Analytics Summary Cards */}
-                <div className="ad-analytics-grid mb-10">
+                <div className="ad-analytics-grid mb-10 gap-5">
 
                     {/* Total Exams */}
-                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(124,58,237,0.45)','--ad-border':'rgba(124,58,237,0.22)'}}>
+                    <div className="ad-stat-card premium-hover-lift" style={{'--ad-glow':'rgba(124,58,237,0.45)','--ad-border':'rgba(124,58,237,0.22)'}}>
                         <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#7c3aed,#a855f7)'}} />
                         <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
@@ -514,7 +606,7 @@ const updateQuestion = async () => {
                     </div>
 
                     {/* Active Students */}
-                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(34,197,94,0.4)','--ad-border':'rgba(34,197,94,0.2)'}}>
+                    <div className="ad-stat-card premium-hover-lift" style={{'--ad-glow':'rgba(34,197,94,0.4)','--ad-border':'rgba(34,197,94,0.2)'}}>
                         <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#16a34a,#22c55e)'}} />
                         <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
@@ -538,7 +630,7 @@ const updateQuestion = async () => {
                     </div>
 
                     {/* Total Violations */}
-                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(239,68,68,0.4)','--ad-border':'rgba(239,68,68,0.2)'}}>
+                    <div className="ad-stat-card premium-hover-lift" style={{'--ad-glow':'rgba(239,68,68,0.4)','--ad-border':'rgba(239,68,68,0.2)'}}>
                         <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#dc2626,#ef4444)'}} />
                         <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
@@ -562,7 +654,7 @@ const updateQuestion = async () => {
                     </div>
 
                     {/* Average Score */}
-                    <div className="ad-stat-card" style={{'--ad-glow':'rgba(6,182,212,0.4)','--ad-border':'rgba(6,182,212,0.2)'}}>
+                    <div className="ad-stat-card premium-hover-lift"style={{'--ad-glow':'rgba(6,182,212,0.4)','--ad-border':'rgba(6,182,212,0.2)'}}>
                         <div className="h-0.5 w-full" style={{background:'linear-gradient(90deg,#0891b2,#06b6d4)'}} />
                         <div className="p-6">
                             <div className="flex items-start justify-between mb-5">
@@ -606,7 +698,7 @@ const updateQuestion = async () => {
                     {exams.length === 0 ? (
                         <div className="text-center py-20 rounded-2xl" style={{border:'1px dashed rgba(167,139,250,0.2)',background:'rgba(124,58,237,0.04)'}}>
                             <p className="text-white font-semibold">No exams yet</p>
-                            <p className="text-sm mt-1" style={{color:'rgba(196,181,253,0.5)'}}>Click "+ Create Exam" to get started.</p>
+                            <p className="text-sm mt-1" style={{color:'rgba(196,181,253,0.5)'}}>Click Create Exam to get started.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -670,6 +762,153 @@ const updateQuestion = async () => {
                 </div>
 
             </div>
+
+            {/* Change Password Modal */}
+            {showModal && (
+                <div className="cp-overlay">
+
+                    {/* Backdrop */}
+                    <div className="cp-backdrop" onClick={closeModal} />
+
+                    {/* Modal card */}
+                    <div className="cp-card">
+
+                        <div className="cp-top-strip" />
+
+                        {/* Header */}
+                        <div className="cp-header">
+                            <div className="cp-header-left">
+                                <div className="cp-icon-wrap">
+                                    <svg className="cp-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="cp-title">Change Password</h2>
+                                    <p className="cp-subtitle">Update your account password</p>
+                                </div>
+                            </div>
+                            <button onClick={closeModal} className="cp-close-btn">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Form */}
+                        <div className="cp-body">
+
+                            {/* Current Password */}
+                            <div className="cp-field">
+                                <label className="cp-label">Current Password</label>
+                                <div className="cp-input-wrap">
+                                    <span className="cp-input-icon">
+                                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </span>
+                                    <input
+                                        type={showCurrent ? "text" : "password"}
+                                        placeholder="Enter current password"
+                                        className={inputClass}
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                    />
+                                    <EyeIcon show={showCurrent} toggle={() => setShowCurrent(!showCurrent)} />
+                                </div>
+                            </div>
+
+                            {/* New Password */}
+                            <div className="cp-field">
+                                <label className="cp-label">New Password</label>
+                                <div className="cp-input-wrap">
+                                    <span className="cp-input-icon">
+                                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                    </span>
+                                    <input
+                                        type={showNew ? "text" : "password"}
+                                        placeholder="Enter new password"
+                                        className={inputClass}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                    <EyeIcon show={showNew} toggle={() => setShowNew(!showNew)} />
+                                </div>
+                            </div>
+
+                            {/* Confirm Password */}
+                            <div className="cp-field">
+                                <label className="cp-label">Confirm New Password</label>
+                                <div className="cp-input-wrap">
+                                    <span className="cp-input-icon">
+                                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </span>
+                                    <input
+                                        type={showConfirm ? "text" : "password"}
+                                        placeholder="Confirm new password"
+                                        className={inputClass}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                    <EyeIcon show={showConfirm} toggle={() => setShowConfirm(!showConfirm)} />
+                                </div>
+                            </div>
+
+                            {/* Feedback message */}
+                            {modalMessage.text && (
+                                <div className={`cp-feedback ${modalMessage.type === "success" ? "cp-feedback-success" : "cp-feedback-error"}`}>
+                                    {modalMessage.type === "success" ? (
+                                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{flexShrink:0}}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    ) : (
+                                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{flexShrink:0}}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    )}
+                                    {modalMessage.text}
+                                </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="cp-actions">
+                                <button onClick={closeModal} className="cp-btn-cancel">
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleChangePassword}
+                                    disabled={loadingPassword}
+                                    className="cp-btn-submit"
+                                >
+                                    {loadingPassword ? (
+                                        <>
+                                            <svg className="cp-spin" fill="none" viewBox="0 0 24 24" width="15" height="15">
+                                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{opacity:0.25}} />
+                                                <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" style={{opacity:0.75}} />
+                                            </svg>
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Update Password
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
 
             {/* Confirmation Modals — inside root div */}
             <ConfirmModal

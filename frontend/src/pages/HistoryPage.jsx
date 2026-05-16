@@ -5,6 +5,9 @@ import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
+
+
 import {
     LineChart,
     Line,
@@ -272,9 +275,9 @@ function HistoryPage() {
 
                 {/* ── Toolbar ── */}
                 <div className="hp-toolbar mb-6">
-                    <button onClick={() => navigate("/student-dashboard")} className="hp-btn-back">
+                    <button onClick={() => navigate("/student-dashboard")} className="premium-back-btn">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                        Back to Dashboard
+                        Back
                     </button>
                     <button onClick={exportPDF} className="premium-btn-primary hp-btn-export">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4m-9 8h10" /></svg>
@@ -284,11 +287,14 @@ function HistoryPage() {
 
                 {/* ── Loading ── */}
                 {loading && (
-                    <div className="hp-loading">
-                        <div className="hp-spinner" />
-                        <p className="hp-loading-text">Loading your history...</p>
-                    </div>
-                )}
+
+    <PremiumLoader
+        title="Loading Exam History..."
+        subtitle="Fetching your past attempts and performance analytics."
+        height="60vh"
+    />
+
+)}
 
                 {/* ── Error ── */}
                 {!loading && error && (
@@ -305,7 +311,7 @@ function HistoryPage() {
                 {/* ── Empty state ── */}
                 {!loading && !error && results.length === 0 && (
                     <div className="hp-empty-card">
-                        <div className="hp-empty-icon hp-empty-icon-purple">
+                        <div className="hp-empty-icon hp-empty-icon-purple premium-empty-icon">
                             <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                         </div>
                         <p className="hp-empty-title">No exam history yet</p>

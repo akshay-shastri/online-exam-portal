@@ -9,6 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
+import PremiumLoader from "../components/PremiumLoader";
 
 function ExamPage() {
 
@@ -22,8 +23,10 @@ function ExamPage() {
     const [questionsError, setQuestionsError] = useState(false);
     const [alreadyAttempted, setAlreadyAttempted] = useState(false);
     const [timeLeft, setTimeLeft] = useState(null);
+    const [totalDuration, setTotalDuration] = useState(0);
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [submissionStage, setSubmissionStage] = useState("idle");
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [warning, setWarning] = useState("");
     const [flashWarning, setFlashWarning] = useState(false);
@@ -37,6 +40,7 @@ function ExamPage() {
     const [captureFlash, setCaptureFlash] = useState(false);
     const [capturingPhoto, setCapturingPhoto] = useState(false);
     const [violationTimeline, setViolationTimeline] = useState([]);
+    const [resultData, setResultData] = useState(null);
 
     // Refs — always hold current values, no stale closure issues
     const violationsRef = useRef(0);
@@ -158,6 +162,7 @@ const speakMessage = useCallback((message) => {
         setSubmitted(true);
         setShowSubmitConfirm(false);
         setSubmitting(true);
+        setSubmissionStage("processing");   
 
         const qs = questionsRef.current;
         const ans = answersRef.current;
@@ -258,21 +263,24 @@ if (endImage) {
             console.log(e);
         }
 
-        navigate("/result", {
-            state: {
-                score: finalScore,
-                correctAnswers,
-                wrongAnswers,
-                totalQuestions,
-                examTitle,
-                timeTaken: qs[0]?.exam ? `${Math.floor((qs[0].exam.duration * 60 - (tl || 0)) / 60)} min`: "N/A",
-                questions: qs,
-                answers: ans,
+        setResultData({
+    score: finalScore,
+    correctAnswers,
+    wrongAnswers,
+    totalQuestions,
+    examTitle,
+    timeTaken: qs[0]?.exam
+        ? `${Math.floor((qs[0].exam.duration * 60 - (tl || 0)) / 60)} min`
+        : "N/A",
+    questions: qs,
+    answers: ans,
+    violations: violationsRef.current,
+});
 
-                
-                violations: violationsRef.current,
-}
-        });
+setSubmissionStage("success");
+setSubmitting(false);
+
+       
     }, [examId, navigate]);
 
    // ── Violation handler — uses ref, never stale ──
@@ -347,11 +355,33 @@ const handleViolation = useCallback((reason) => {
     // ── Timer ──
 
     useEffect(() => {
-        if (timeLeft === null || submitted) return;
-        if (timeLeft <= 0) { submitExam(); return; }
-        const timer = setInterval(() => setTimeLeft((p) => p - 1), 1000);
-        return () => clearInterval(timer);
-    }, [timeLeft, submitted, submitExam]);
+
+    // DO NOT START TIMER BEFORE EXAM STARTS
+    if (!examStarted) return;
+
+    if (timeLeft === null || submitted) return;
+
+    if (timeLeft <= 0) {
+
+        submitExam();
+
+        return;
+    }
+
+    const timer = setInterval(() => {
+
+        setTimeLeft((prev) => prev - 1);
+
+    }, 1000);
+
+    return () => clearInterval(timer);
+
+}, [
+    examStarted,
+    timeLeft,
+    submitted,
+    submitExam
+]);
 
     useEffect(() => {
         if (timeLeft === 60) toast.error("Only 1 minute remaining!");
@@ -900,16 +930,22 @@ return () => {
 
         setQuestions(shuffled);
 
-        if (
+       if (
     shuffled.length > 0 &&
     shuffled[0].exam?.duration
 ) {
 
-    setTimeLeft(
-        shuffled[0].exam.duration * 60
-    );
+    const durationInMinutes =
+        shuffled[0].exam.duration;
+
+    setTotalDuration(durationInMinutes);
+
+    // DO NOT START TIMER YET
+    setTimeLeft(durationInMinutes * 60);
 
 } else {
+
+    setTotalDuration(5);
 
     setTimeLeft(300);
 }
@@ -989,6 +1025,14 @@ return () => {
         return [...prev, questionId];
     });
 };
+
+const handleViewResults = () => {
+
+    navigate("/result", {
+        state: resultData
+    });
+};
+
 
 // FULL SCREEN
 const enterFullscreen = async () => {
@@ -1149,9 +1193,19 @@ const startExam = async () => {
         );
     }
 
-setExamStarted(true);
-};
+    // START TIMER ONLY AFTER EXAM STARTS
+    if (
+        questions.length > 0 &&
+        questions[0].exam?.duration
+    ) {
 
+        setTimeLeft(
+            questions[0].exam.duration * 60
+        );
+    }
+
+    setExamStarted(true);
+};
 
 
 // RE-ENTER FUNCTION 
@@ -1184,10 +1238,8 @@ const reEnterFullscreen = async () => {
     const seconds = safeTime % 60;
     const answeredCount = Object.keys(answers).length;
     const currentQuestion = questions[currentQuestionIndex];
-    const totalDuration = questions.length > 0 && questions[0].exam
-        ? questions[0].exam.duration * 60
-        : 300;
-    const timerPercentage = (displayTime / totalDuration) * 100;
+    const totalDurationInSeconds = totalDuration * 60;
+    const timerPercentage = (displayTime / totalDurationInSeconds) * 100;
     const optionLabels = ["A", "B", "C", "D"];
 
 
@@ -1209,13 +1261,14 @@ const reEnterFullscreen = async () => {
 };
 
     // ── Timer urgency (UI only) ──
-    const timerUrgency = safeTime < 120  ? 'critical' : safeTime < 300 ? 'warning'  : 'normal';                 
+   const timerUrgency = safeTime < 30  ? "danger" : safeTime < 120 ? "critical" : safeTime < 300 ? "warning" : "normal";                 
 
     const timerColors = {
         normal:   { text: '#e9d5ff',  glow: 'rgba(124,58,237,0.55)',  bg: 'linear-gradient(135deg,#7c3aed,#a855f7)',  border: 'rgba(167,139,250,0.35)' },
         warning:  { text: '#fed7aa',  glow: 'rgba(249,115,22,0.55)',  bg: 'linear-gradient(135deg,#c2410c,#f97316)',  border: 'rgba(249,115,22,0.45)'  },
         critical: { text: '#fecaca',  glow: 'rgba(239,68,68,0.65)',   bg: 'linear-gradient(135deg,#991b1b,#ef4444)',  border: 'rgba(239,68,68,0.55)'   },
-    };
+        danger: { text: '#ffffff', glow: 'rgba(239,68,68,0.95)',  bg: 'linear-gradient(135deg,#7f1d1d,#dc2626,#ef4444)', border: 'rgba(252,165,165,0.9)',},
+     };
     const tc = timerColors[timerUrgency];
 
 
@@ -1274,7 +1327,7 @@ const reEnterFullscreen = async () => {
 
             {/* Header */}
             <div className="sticky top-0 z-50" style={{background:'rgba(12,10,30,0.88)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderBottom:'1px solid rgba(168,85,247,0.12)'}}>
-                <div className="max-w-5xl mx-auto px-6 py-3.5 flex items-center justify-between">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap gap-3 items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:'linear-gradient(135deg,#6d28d9,#a21caf)',boxShadow:'0 0 16px rgba(109,40,217,0.45)'}}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1289,8 +1342,15 @@ const reEnterFullscreen = async () => {
                     </div>
                     {!alreadyAttempted && (
                         <div
-                            className={`exam-timer-pill${timerUrgency === 'critical' ? ' exam-timer-critical' : timerUrgency === 'warning' ? ' exam-timer-warning' : ''}`}
-                            style={{
+className={`exam-timer-pill text-sm sm:text-base ${
+    timerUrgency === 'danger'
+        ? ' exam-timer-critical'
+        : timerUrgency === 'critical'
+        ? ' exam-timer-critical'
+        : timerUrgency === 'warning'
+        ? ' exam-timer-warning'
+        : ''
+}`}                            style={{
                                 background: tc.bg,
                                 boxShadow: `0 0 18px ${tc.glow}, 0 2px 8px rgba(0,0,0,0.4)`,
                                 border: `1px solid ${tc.border}`,
@@ -1307,8 +1367,11 @@ const reEnterFullscreen = async () => {
                             </span>
                             {timerUrgency !== 'normal' && (
                                 <span className="exam-timer-label">
-                                    {timerUrgency === 'critical' ? '⚠ Critical' : '⚠ Low'}
-                                </span>
+{timerUrgency === 'danger'
+    ? '🚨 Final Seconds'
+    : timerUrgency === 'critical'
+    ? '⚠ Critical'
+    : '⚠ Low'}                                </span>
                             )}
                         </div>
                     )}
@@ -1336,8 +1399,7 @@ const reEnterFullscreen = async () => {
             </div>
 {/* Camera preview */}
 {!alreadyAttempted && !submitted && (
-    <div className="fixed top-[84px] right-4 z-50">
-        <div
+<div className="fixed top-[84px] right-2 sm:right-4 z-50 max-w-full overflow-hidden">        <div
             style={{
                 borderRadius: '16px',
                 overflow: 'hidden',
@@ -1355,7 +1417,9 @@ const reEnterFullscreen = async () => {
                 autoPlay
                 muted
                 playsInline
-                style={{width:'140px', height:'95px', objectFit:'cover', display:'block', background:'#000'}}
+                style={{
+    width:'120px',
+    height:'82px',bjectFit:'cover', display:'block', background:'#000'}}
             />
             <div
                 style={{
@@ -1441,7 +1505,7 @@ const reEnterFullscreen = async () => {
     </div>
 )}
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
                 {/* Warning banner */}
                 {warning && (
@@ -1468,87 +1532,16 @@ const reEnterFullscreen = async () => {
                     </div>
                 )}
 
-                {/* Loading */}
-             {/* Loading */}
-{questionsLoading && (
-    <div className="flex items-center justify-center py-28">
-        <div
-            className="w-full max-w-2xl rounded-3xl overflow-hidden"
-            style={{
-                background:
-                    'linear-gradient(160deg,rgba(109,40,217,0.12) 0%,rgba(12,10,30,0.88) 100%)',
-                border:
-                    '1px solid rgba(168,85,247,0.22)',
-                boxShadow:
-                    '0 0 60px rgba(124,58,237,0.15), 0 24px 64px rgba(0,0,0,0.5)',
-                backdropFilter:'blur(20px)',
-            }}
-        >
-            <div
-                className="h-1"
-                style={{
-                    background:
-                        'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)'
-                }}
-            />
+            {questionsLoading && (
 
-            <div className="p-10">
+    <PremiumLoader
+        title="Preparing Examination..."
+        subtitle="Loading questions, verification system, and exam environment."
+        height="70vh"
+    />
 
-                <div className="flex justify-center mb-8">
-                    <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center animate-spin"
-                        style={{
-                            border:
-                                '3px solid rgba(168,85,247,0.15)',
-                            borderTop:
-                                '3px solid #a855f7',
-                            boxShadow:
-                                '0 0 28px rgba(124,58,237,0.35)',
-                        }}
-                    />
-                </div>
-
-                <div className="space-y-4">
-                    {[1,2,3].map((i)=>(
-                        <div
-                            key={i}
-                            className="rounded-2xl overflow-hidden"
-                            style={{
-                                background:
-                                    'rgba(255,255,255,0.04)',
-                                border:
-                                    '1px solid rgba(255,255,255,0.06)',
-                                padding:'18px',
-                            }}
-                        >
-                            <div
-                                className="animate-pulse rounded-xl"
-                                style={{
-                                    height:'18px',
-                                    width: i===2 ? '75%' : '100%',
-                                    background:
-                                        'linear-gradient(90deg,rgba(124,58,237,0.08),rgba(168,85,247,0.18),rgba(124,58,237,0.08))',
-                                }}
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                <p
-                    className="text-center mt-8 font-semibold"
-                    style={{
-                        color:'rgba(196,181,253,0.7)',
-                        letterSpacing:'0.3px',
-                    }}
-                >
-                    Preparing your examination...
-                </p>
-            </div>
-        </div>
-    </div>
 )}
 
-                {/* Already Attempted */}
               {/* Already Attempted */}
 {!questionsLoading && alreadyAttempted && (
     <div className="flex items-center justify-center py-20">
@@ -1600,7 +1593,7 @@ const reEnterFullscreen = async () => {
                 </div>
 
                 <h2
-                    className="text-4xl font-black mb-4"
+                    className="text-3xl sm:text-4xl font-black mb-4"
                     style={{
                         background:
                             'linear-gradient(90deg,#d1fae5,#6ee7b7)',
@@ -1625,7 +1618,7 @@ const reEnterFullscreen = async () => {
 
                 <button
                     onClick={() => navigate("/student-dashboard")}
-                    className="px-8 py-4 rounded-2xl font-bold transition-all duration-200"
+                    className="premium-back-btn"
                     style={{
                         background:
                             'linear-gradient(135deg,#059669,#10b981)',
@@ -1644,7 +1637,7 @@ const reEnterFullscreen = async () => {
                         e.currentTarget.style.boxShadow='0 0 28px rgba(16,185,129,0.35)';
                     }}
                 >
-                    Back to Dashboard
+                    Back
                 </button>
             </div>
         </div>
@@ -1705,7 +1698,7 @@ const reEnterFullscreen = async () => {
                 </div>
 
                 <h2
-                    className="text-4xl font-black mb-4"
+                    className="text-3xl sm:text-4xl font-black mb-4"
                     style={{
                         background:
                             'linear-gradient(90deg,#fecaca,#f87171)',
@@ -1787,7 +1780,7 @@ const reEnterFullscreen = async () => {
                                     Exam Ready
                                 </div>
                                 <h2
-                                    className="text-4xl font-black mb-3"
+                                    className="text-3xl sm:text-4xl font-black mb-3"
                                     style={{
                                         background: 'linear-gradient(90deg,#f3e8ff,#c4b5fd,#a78bfa)',
                                         WebkitBackgroundClip: 'text',
@@ -1804,7 +1797,7 @@ const reEnterFullscreen = async () => {
                             {/* Instruction items */}
                             <div className="space-y-3 mb-10">
                                 {[
-                                    { icon: '⏱', label: 'Duration', value: `${Math.floor(displayTime / 60)} minutes`, accent: true },
+                                    { icon: '⏱', label: 'Duration', value: `${totalDuration} minutes`, accent: true },
                                     { icon: '📷', label: 'Webcam access is required throughout the exam.' },
                                     { icon: '🖥', label: 'Fullscreen mode will be enabled automatically.' },
                                     { icon: '⚠', label: 'Tab switching and fullscreen exit are monitored.' },
@@ -2017,7 +2010,7 @@ const reEnterFullscreen = async () => {
                         <div
                             className="hidden lg:flex flex-col gap-0 flex-shrink-0"
                             style={{
-                                width: '220px',
+                                width: '210px',
                                 position: 'sticky',
                                 top: '80px',
                                 maxHeight: 'calc(100vh - 120px)',
@@ -2172,7 +2165,7 @@ const reEnterFullscreen = async () => {
                                                 key={q.id}
                                                 onClick={() => setCurrentQuestionIndex(index)}
                                                 style={{
-                                                    width:'36px', height:'36px', borderRadius:'9px',
+                                                    width:'34px', height:'34px', borderRadius:'9px',
                                                     background:bg, color, border,
                                                     fontSize:'11px', fontWeight:700,
                                                     flexShrink:0,
@@ -2190,11 +2183,12 @@ const reEnterFullscreen = async () => {
 
                             {/* Question Card */}
                             <div
-                                className="rounded-3xl overflow-hidden"
+                                className="rounded-3xl overflow-hidden premium-hover-lift"
                                 style={{
                                     background: 'linear-gradient(160deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.015) 100%)',
                                     border: '1px solid rgba(168,85,247,0.15)',
                                     boxShadow: `0 0 0 1px rgba(168,85,247,0.08), 0 20px 60px rgba(0,0,0,0.55), 0 0 40px rgba(124,58,237,0.12)`,
+                                    padding: 'clamp(18px, 3vw, 32px)',
                                     position:'relative',
                                     overflow:'hidden',
                                 }}
@@ -2309,11 +2303,11 @@ const reEnterFullscreen = async () => {
                                     </div>
 
                                     {/* Navigation */}
-                                    <div className="flex items-center justify-between mt-10">
+                                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-stretch sm:items-center justify-between mt-10">
                                         <button
                                             onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
                                             disabled={currentQuestionIndex === 0}
-                                            className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                            className="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                                             style={{
                                                 background: 'rgba(255,255,255,0.06)',
                                                 border: '1px solid rgba(255,255,255,0.1)',
@@ -2328,7 +2322,7 @@ const reEnterFullscreen = async () => {
                                         {currentQuestionIndex === questions.length - 1 ? (
                                             <button
                                                 onClick={() => setShowSubmitConfirm(true)}
-                                                className="premium-btn-primary px-8 py-3 text-sm font-bold"
+                                                className="premium-btn-primary w-full sm:w-auto px-8 py-3 text-sm font-bold"
                                             >
                                                 Submit Exam
                                             </button>
@@ -2340,7 +2334,7 @@ const reEnterFullscreen = async () => {
                                                     }
                                                     setCurrentQuestionIndex(currentQuestionIndex + 1);
                                                 }}
-                                                className="premium-btn-primary px-6 py-3 text-sm font-semibold"
+                                                className="premium-btn-primary w-full sm:w-auto px-6 py-3 text-sm font-semibold"
                                             >
                                                 Next →
                                             </button>
@@ -2393,6 +2387,92 @@ const reEnterFullscreen = async () => {
                 onConfirm={submitExam}
                 onCancel={() => setShowSubmitConfirm(false)}
             />
+
+            {/* ───────────────── SUBMISSION PROCESSING OVERLAY ───────────────── */}
+
+{submissionStage === "processing" && (
+
+    <div className="submission-overlay">
+
+        <div className="submission-card">
+
+            <div className="submission-loader"></div>
+
+            <div className="submission-icon-glow"></div>
+
+            <h1 className="submission-title">
+                Submitting Your Exam...
+            </h1>
+
+            <p className="submission-subtitle">
+                Please wait while we securely process your responses,
+                face verification, and exam activity.
+            </p>
+
+            <div className="submission-warning-box">
+
+                <div className="submission-warning-item">
+                    • Do not close the browser
+                </div>
+
+                <div className="submission-warning-item">
+                    • Do not refresh the page
+                </div>
+
+                <div className="submission-warning-item">
+                    • Do not disconnect internet
+                </div>
+
+                <div className="submission-warning-item">
+                    • Uploading face verification securely
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+)}
+
+{/* ───────────────── SUCCESS OVERLAY ───────────────── */}
+
+{submissionStage === "success" && (
+
+    <div className="submission-overlay">
+
+        <div className="submission-card success-card">
+
+            <div className="success-checkmark">
+
+                ✓
+
+            </div>
+
+            <h1 className="submission-title success-title">
+                Exam Submitted Successfully
+            </h1>
+
+            <p className="submission-subtitle">
+
+                Thank you for attempting the examination.
+
+                <br />
+
+                Your responses have been securely recorded.
+
+            </p>
+
+            <button
+                className="premium-btn-primary mt-6"
+                onClick={handleViewResults}
+            >
+                View Results
+            </button>
+
+        </div>
+
+    </div>
+)}
 
         </div>
     );

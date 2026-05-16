@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
+import PremiumLoader from "../components/PremiumLoader";
 
 function ExamLeaderboard() {
     const navigate = useNavigate();
@@ -96,13 +97,14 @@ function ExamLeaderboard() {
 
     if (loading) {
         return (
-            <div className="premium-root min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 rounded-full border-4 border-purple-400/30 border-t-purple-400 animate-spin mx-auto mb-4" />
-                    <p style={{ color: 'rgba(196,181,253,0.7)' }}>Loading leaderboard...</p>
-                </div>
-            </div>
-        );
+
+    <PremiumLoader
+    title="Loading Leaderboard Data..."
+    subtitle="Analyzing student rankings and performance metrics."
+    height="100vh"
+/>
+
+);
     }
 
     if (!exam) {
@@ -134,8 +136,8 @@ function ExamLeaderboard() {
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="text-white/80 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        ← Back to Exam
+                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-back-btn">
+                        ← Back
                     </button>
 
                     <button
@@ -221,11 +223,19 @@ function ExamLeaderboard() {
                 {/* Leaderboard */}
                 {filteredResults.length === 0 ? (
                     <div className="text-center py-24 rounded-2xl" style={{ border: '1px dashed rgba(167,139,250,0.2)', background: 'rgba(124,58,237,0.04)' }}>
-                        <svg className="w-20 h-20 mx-auto mb-4" style={{ color: 'rgba(196,181,253,0.2)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-20 h-20 mx-auto mb-4 premium-empty-icon" style={{ color: 'rgba(196,181,253,0.2)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                         <p style={{ color: '#f3e8ff' }} className="font-semibold text-xl mb-2">No Leaderboard Data</p>
                         <p style={{ color: 'rgba(196,181,253,0.6)' }}>No student submissions available for this exam yet.</p>
+                        <button
+    onClick={() => navigate(`/admin/exam/${id}`)}
+    className="premium-btn-primary mt-6"
+>
+    Back to Exam
+</button>
+
+
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -239,19 +249,12 @@ function ExamLeaderboard() {
                             return (
                                 <div
                                     key={result.id || index}
-                                    className="rounded-xl p-5 transition-all duration-300"
+                                    className="premium-data-card rounded-xl p-5"
                                     style={{
                                         background: rankColor.bg || 'linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)',
                                         border: `1px solid ${rankColor.border}`,
+                                        transform: rank <= 3 ? 'scale(1.01)' : 'scale(1)',
                                         boxShadow: rankColor.glow === "none" ? '0 4px 24px rgba(0,0,0,0.35)' : `${rankColor.glow}, 0 4px 24px rgba(0,0,0,0.35)`
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.boxShadow = rankColor.glow === "none" ? '0 12px 48px rgba(124,58,237,0.25)' : `${rankColor.glow}, 0 12px 48px rgba(124,58,237,0.25)`;
-                                        e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.boxShadow = rankColor.glow === "none" ? '0 4px 24px rgba(0,0,0,0.35)' : `${rankColor.glow}, 0 4px 24px rgba(0,0,0,0.35)`;
-                                        e.currentTarget.style.borderColor = `1px solid ${rankColor.border}`;
                                     }}
                                 >
                                     <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -280,7 +283,7 @@ function ExamLeaderboard() {
                                         </div>
 
                                         {/* Stats */}
-                                        <div className="flex items-center gap-8 flex-wrap md:flex-nowrap">
+                                        <div className="grid grid-cols-2 md:flex md:items-center gap-5 md:gap-8">
                                             <div className="text-center">
                                                 <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>Score</p>
                                                 <p style={{ color: '#f3e8ff', fontSize: '16px', fontWeight: 700, marginTop: '4px' }}>
