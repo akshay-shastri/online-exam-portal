@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import "../styles/dashboard.css";
 import PremiumLoader from "../components/PremiumLoader";
-
+import { LogOut, ArrowLeft, CheckCircle2, Plus, UploadCloud, Save } from "lucide-react";
 
 function ExamQuestions() {
     const navigate = useNavigate();
@@ -40,7 +40,8 @@ function ExamQuestions() {
     // Delete confirmation
     const [deletingId, setDeletingId] = useState(null);
 
-    const inputClass = "w-full bg-black/30 border border-purple-500/20 text-purple-100 text-sm rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400/40 placeholder-purple-300/35 transition-all duration-300 hover:border-purple-400/30 backdrop-blur-xl";
+    const inputClass = "w-full bg-black/30 border border-amber-500/20 text-amber-100 text-sm rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400/40 placeholder-amber-300/35 transition-all duration-300 hover:border-amber-400/30 backdrop-blur-xl";
+
     useEffect(() => {
         fetchExamAndQuestions();
     }, [id]);
@@ -184,46 +185,21 @@ function ExamQuestions() {
 
             setLoadingQuestion(true);
 
-           for (const row of jsonData) {
+            for (const row of jsonData) {
+                console.log("EXCEL ROW:", row);
 
-    console.log("EXCEL ROW:", row);
-
-    await API.post("/questions", {
-
-        questionText:
-            row.Question ||
-            row.question,
-
-        optionA:
-            row.OptionA ||
-            row["Option A"] ||
-            row.optionA,
-
-        optionB:
-            row.OptionB ||
-            row["Option B"] ||
-            row.optionB,
-
-        optionC:
-            row.OptionC ||
-            row["Option C"] ||
-            row.optionC,
-
-        optionD:
-            row.OptionD ||
-            row["Option D"] ||
-            row.optionD,
-
-        correctAnswer:
-            row.CorrectAnswer ||
-            row["Correct Answer"] ||
-            row.correctAnswer,
-
-        exam: {
-            id: parseInt(id)
-        }
-    });
-}
+                await API.post("/questions", {
+                    questionText: row.Question || row.question,
+                    optionA: row.OptionA || row["Option A"] || row.optionA,
+                    optionB: row.OptionB || row["Option B"] || row.optionB,
+                    optionC: row.OptionC || row["Option C"] || row.optionC,
+                    optionD: row.OptionD || row["Option D"] || row.optionD,
+                    correctAnswer: row.CorrectAnswer || row["Correct Answer"] || row.correctAnswer,
+                    exam: {
+                        id: parseInt(id)
+                    }
+                });
+            }
 
             toast.success(`${jsonData.length} questions uploaded successfully!`);
             setShowAddModal(false);
@@ -246,20 +222,18 @@ function ExamQuestions() {
 
     if (loading) {
         return (
-
-    <PremiumLoader
-        title="Loading Exam Questions..."
-        subtitle="Fetching exam details and question bank."
-        height="100vh"
-    />
-
-);
+            <PremiumLoader
+                title="Loading Exam Questions..."
+                subtitle="Fetching exam details and question bank."
+                height="100vh"
+            />
+        );
     }
 
     if (!exam) {
         return (
             <div className="premium-root min-h-screen flex items-center justify-center">
-                <p style={{ color: 'rgba(196,181,253,0.7)' }}>Exam not found</p>
+                <p className="text-white/70 text-lg">Exam not found</p>
             </div>
         );
     }
@@ -280,13 +254,16 @@ function ExamQuestions() {
                     </div>
                     <div>
                         <div className="logo-text-primary">Smart Exam Portal</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(196,181,253,0.5)', letterSpacing: '0.3px' }}>Admin Panel</div>
+                        <div className="text-white/45 text-[11px] tracking-wide">Admin Panel</div>
                     </div>
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-back-btn">
-                        ← Back
+                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-btn-secondary">
+                        <div className="flex items-center gap-2">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>Back</span>
+                        </div>
                     </button>
 
                     <button
@@ -308,7 +285,7 @@ function ExamQuestions() {
                             <div className="dropdown-menu">
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item dropdown-item-danger" onClick={logout}>
-                                    <div className="dropdown-item-icon">🚪</div>
+                                    <div className="dropdown-item-icon"><LogOut className="w-4 h-4" /></div>
                                     <span>Logout</span>
                                 </div>
                             </div>
@@ -317,7 +294,7 @@ function ExamQuestions() {
                 </div>
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
+            <div className="px-6 md:px-12 py-10 max-w-[1800px] mx-auto space-y-10">
                 {/* Hero Section */}
                 <div className="mb-12 glass-hero">
                     <div className="relative z-10">
@@ -327,112 +304,80 @@ function ExamQuestions() {
                     </div>
 
                     <div className="flex flex-wrap gap-6 mt-8 items-start">
-                        <div className="stats-card">
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Exam ID</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>#{exam.id}</p>
+                        <div className="stats-card premium-shine min-w-[220px]">
+                            <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.5px]">Exam ID</p>
+                            <p className="text-white text-2xl font-extrabold mt-2">#{exam.id}</p>
                         </div>
-                        <div className="stats-card">
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Questions</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{questions.length}</p>
+
+                        <div className="stats-card premium-shine min-w-[220px]">
+                            <p className="text-cyan-300/70 text-xs font-semibold uppercase tracking-[0.5px]">Total Questions</p>
+                            <p className="text-cyan-300 text-2xl font-extrabold mt-2">{questions.length}</p>
                         </div>
-                        <div className="stats-card">
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duration</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{exam.duration} min</p>
+
+                        <div className="stats-card premium-shine min-w-[220px]">
+                            <p className="text-emerald-300/70 text-xs font-semibold uppercase tracking-[0.5px]">Duration</p>
+                            <p className="text-emerald-300 text-2xl font-extrabold mt-2">{exam.duration} min</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Header Section */}
                 <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-2xl font-bold" style={{ color: '#f3e8ff' }}>All Questions</h3>
-                    
+                    <h3 className="premium-section-title text-3xl">All Questions</h3>
                     <div className="group relative">
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:scale-110"
-                            style={{
-                                background: 'linear-gradient(135deg, #7c3aed, #d946ef)',
-                                boxShadow: '0 0 0 1px rgba(167,139,250,0.3), 0 6px 24px rgba(124,58,237,0.4)'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(167,139,250,0.5), 0 12px 36px rgba(124,58,237,0.6)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = '0 0 0 1px rgba(167,139,250,0.3), 0 6px 24px rgba(124,58,237,0.4)';
-                            }}
+                            className="premium-button premium-shine flex items-center gap-2 px-6 py-4"
                         >
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
+                            <span>Add Question</span>
                         </button>
-                        
-                        {/* Tooltip */}
-                        <div
-                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
-                            style={{
-                                background: 'rgba(0,0,0,0.8)',
-                                color: '#f3e8ff',
-                                backdropFilter: 'blur(8px)'
-                            }}
-                        >
-                            Add Question
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0" style={{
-                                borderLeft: '6px solid transparent',
-                                borderRight: '6px solid transparent',
-                                borderTop: '6px solid rgba(0,0,0,0.8)'
-                            }} />
-                        </div>
                     </div>
                 </div>
 
                 {/* Questions Grid */}
                 {questions.length === 0 ? (
-                    <div className="text-center py-20 empty-state-card">
-                        <svg className="w-16 h-16 mx-auto mb-4" style={{ color: 'rgba(196,181,253,0.3)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="empty-state-card premium-shine text-center py-24">
+                        <svg className="w-16 h-16 mx-auto mb-4" style={{ color: 'rgba(255,216,107,0.18)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
-                        <p style={{ color: '#f3e8ff' }} className="font-semibold text-lg mb-2">No Questions Yet</p>
-                        <p style={{ color: 'rgba(196,181,253,0.6)' }}>Click the + button above to add your first question.</p>
+                        <p style={{ color: '#ffffff' }} className="font-semibold text-lg mb-2">No Questions Yet</p>
+                        <p style={{ color: 'rgba(255,255,255,0.60)' }}>Use the Add Question button above to create your first question.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {questions.map((question, index) => (
                             <div
                                 key={question.id}
-                                className="rounded-2xl p-6 transition-all duration-300 premium-card"
+                                className="question-management-card premium-shine p-7"
                             >
                                 <div className="flex items-start justify-between gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <span style={{ background: 'linear-gradient(135deg, #7c3aed, #d946ef)', color: 'white' }} className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                                {index + 1}
-                                            </span>
-                                            <p style={{ color: '#f3e8ff' }} className="font-semibold text-lg">
-                                                {question.questionText}
-                                            </p>
+                                            <span className="question-number-badge">{index + 1}</span>
+                                            <p className="text-white font-semibold text-lg">{question.questionText}</p>
                                         </div>
 
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                                             {[
-    { label: 'A', value: question.optionA },
-    { label: 'B', value: question.optionB },
-    { label: 'C', value: question.optionC },
-    { label: 'D', value: question.optionD }
-].map((opt) => (
-                                                <div key={opt.label} className="px-3 py-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(167,139,250,0.15)' }}>
-                                                    <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>
-                                                        Option {opt.label}
-                                                    </p>
-                                                    <p style={{ color: '#e9d5ff', marginTop: '4px', fontSize: '13px' }} className="font-medium">
-                                                        {opt.value}
-                                                    </p>
+                                                { label: 'A', value: question.optionA },
+                                                { label: 'B', value: question.optionB },
+                                                { label: 'C', value: question.optionC },
+                                                { label: 'D', value: question.optionD }
+                                            ].map((opt) => (
+                                                <div key={opt.label} className="question-option-card" style={{ background: 'rgba(255,216,107,0.05)', border: '1px solid rgba(255,216,107,0.10)' }}>
+                                                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>Option {opt.label}</p>
+                                                    <p style={{ color: '#ffffff', marginTop: '4px', fontSize: '13px' }} className="font-medium">{opt.value}</p>
                                                 </div>
                                             ))}
                                         </div>
 
                                         <div className="mt-4 flex items-center gap-2">
-                                            <span style={{ background: 'rgba(34,197,94,0.1)', color: '#86efac' }} className="text-xs font-semibold px-3 py-1 rounded-full border border-green-500/30">
-                                                ✓ Answer: {question.correctAnswer}
+                                            <span className="question-answer-badge flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                <span>Answer: {question.correctAnswer}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -441,12 +386,7 @@ function ExamQuestions() {
                                     <div className="flex gap-2 flex-shrink-0">
                                         <button
                                             onClick={() => openEditModal(question)}
-                                            className="p-2.5 rounded-lg transition-all duration-200 hover:shadow-lg"
-                                            style={{
-                                                background: 'rgba(124,58,237,0.15)',
-                                                border: '1px solid rgba(167,139,250,0.2)',
-                                                color: '#c4b5fd'
-                                            }}
+                                            className="premium-action-btn premium-action-btn-edit"
                                             title="Edit Question"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,12 +397,7 @@ function ExamQuestions() {
                                         <button
                                             onClick={() => deleteQuestion(question.id)}
                                             disabled={deletingId === question.id}
-                                            className="p-2.5 rounded-lg transition-all duration-200 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-                                            style={{
-                                                background: 'rgba(239,68,68,0.1)',
-                                                border: '1px solid rgba(239,68,68,0.2)',
-                                                color: '#fca5a5'
-                                            }}
+                                            className="premium-action-btn premium-action-btn-delete disabled:opacity-60 disabled:cursor-not-allowed"
                                             title="Delete Question"
                                         >
                                             {deletingId === question.id ? (
@@ -487,42 +422,30 @@ function ExamQuestions() {
             {/* Add Question Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-<div
-    className="w-full max-w-xl rounded-[32px] overflow-hidden my-auto p-8"
-    style={{
-        background:
-            "linear-gradient(180deg,rgba(14,10,35,0.98) 0%,rgba(8,5,24,0.98) 100%)",
-        border:
-            "1px solid rgba(168,85,247,0.18)",
-        boxShadow:
-            "0 0 80px rgba(124,58,237,0.18), 0 24px 80px rgba(0,0,0,0.65)",
-        backdropFilter: "blur(24px)",
-    }}
->                        <div className="h-1.5 w-full bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-6" />
+                    <div className="premium-modal-card w-full max-w-2xl my-auto p-8 premium-shine">
+                        <div className="h-1.5 w-full bg-gradient-to-r from-amber-500 to-yellow-600 rounded-full mb-6" />
 
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h2 className="text-2xl font-bold text-white">Add Question</h2>
-                                <p className="text-sm text-purple-300/55 mt-1">Add a new question to the exam</p>
+                                <h2 className="premium-button premium-shine flex-1 flex items-center justify-center gap-2">Add Question</h2>
+                                <p className="text-sm text-amber-300/55 mt-1">Add a new question to the exam</p>
                             </div>
                             <button
                                 onClick={() => setShowAddModal(false)}
                                 className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-105"
                                 style={{
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.06)',
-    color: 'rgba(196,181,253,0.7)'
-}}
+                                    background: 'rgba(255,255,255,0.04)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    color: 'rgba(196,181,253,0.7)'
+                                }}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <Plus className="w-5 h-5" />
                             </button>
                         </div>
 
                         <div className="space-y-5 max-h-[65vh] overflow-y-auto pr-2 custom-scrollbar">
                             <div>
-                                <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Question</label>
+                                <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Question</label>
                                 <textarea
                                     placeholder="Enter question text"
                                     className={`${inputClass} resize-none h-24`}
@@ -533,25 +456,25 @@ function ExamQuestions() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option A</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option A</label>
                                     <input type="text" placeholder="Option A" className={inputClass} value={optionA} onChange={(e) => setOptionA(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option B</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option B</label>
                                     <input type="text" placeholder="Option B" className={inputClass} value={optionB} onChange={(e) => setOptionB(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option C</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option C</label>
                                     <input type="text" placeholder="Option C" className={inputClass} value={optionC} onChange={(e) => setOptionC(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option D</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option D</label>
                                     <input type="text" placeholder="Option D" className={inputClass} value={optionD} onChange={(e) => setOptionD(e.target.value)} />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Correct Answer</label>
+                                <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Correct Answer</label>
                                 <select className={inputClass} value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)}>
                                     <option value="">— Select correct answer —</option>
                                     <option value="A">A</option>
@@ -562,14 +485,12 @@ function ExamQuestions() {
                             </div>
 
                             <div className="pt-3 border-t border-white/5">
-                                <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-3">Bulk Upload (Optional)</label>
-                                <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-purple-500/25 rounded-xl cursor-pointer hover:bg-purple-500/10 transition-colors">
-                                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
+                                <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-3">Bulk Upload (Optional)</label>
+                                <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-amber-500/25 rounded-xl cursor-pointer hover:bg-amber-500/10 transition-colors">
+                                    <UploadCloud className="w-5 h-5 text-amber-500" />
                                     <div>
-                                        <p className="text-sm font-medium text-purple-700">Upload Excel file</p>
-                                        <p className="text-xs text-purple-300/65">Columns: Question, OptionA, OptionB, OptionC, OptionD, CorrectAnswer</p>
+                                        <p className="text-sm font-medium text-amber-700">Upload Excel file</p>
+                                        <p className="text-xs text-amber-300/65">Columns: Question, OptionA, OptionB, OptionC, OptionD, CorrectAnswer</p>
                                     </div>
                                     <input
                                         type="file"
@@ -584,35 +505,15 @@ function ExamQuestions() {
 
                         <div className="flex gap-3 mt-8 pt-6 border-t border-white/5">
                             <button
-    onClick={() => setShowAddModal(false)}
-    className="
-    flex-1
-    px-5
-    py-3
-    rounded-2xl
-    text-sm
-    font-semibold
-    transition-all
-    duration-300
-    border
-    border-white/10
-    text-purple-200
-    hover:text-white
-    hover:border-purple-400/30
-    "
-    style={{
-        background:
-            'linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02))',
-        boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.04)'
-    }}
->
-    Cancel
-</button>
+                                onClick={() => setShowAddModal(false)}
+                                className="premium-btn-secondary flex-1"
+                            >
+                                Cancel
+                            </button>
                             <button
                                 onClick={addQuestion}
                                 disabled={loadingQuestion}
-                                className="flex-1 px-5 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex-1 px-5 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loadingQuestion ? (
                                     <>
@@ -639,28 +540,17 @@ function ExamQuestions() {
             {/* Edit Question Modal */}
             {editingQuestion && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-                    <div
-    className="w-full max-w-xl rounded-[32px] overflow-hidden my-auto p-8"
-    style={{
-        background:
-            "linear-gradient(180deg,rgba(14,10,35,0.98) 0%,rgba(8,5,24,0.98) 100%)",
-        border:
-            "1px solid rgba(168,85,247,0.18)",
-        boxShadow:
-            "0 0 80px rgba(124,58,237,0.18), 0 24px 80px rgba(0,0,0,0.65)",
-        backdropFilter: "blur(24px)",
-    }}
->
-                        <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full mb-6" />
+                    <div className="premium-modal-card w-full max-w-2xl my-auto p-8 premium-shine">
+                        <div className="h-1 w-full bg-gradient-to-r from-amber-300 via-yellow-500 to-amber-600 rounded-full mb-6" />
 
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-white">Edit Question</h2>
-                                <p className="text-sm text-purple-300/55 mt-1">Update question details</p>
+                                <p className="text-sm text-amber-300/55 mt-1">Update question details</p>
                             </div>
                             <button
                                 onClick={() => setEditingQuestion(null)}
-                                className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-purple-300/65 transition-all"
+                                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-amber-200/80 transition-all border border-white/10"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -670,7 +560,7 @@ function ExamQuestions() {
 
                         <div className="space-y-5 max-h-[65vh] overflow-y-auto pr-2 custom-scrollbar">
                             <div>
-                                <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Question</label>
+                                <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Question</label>
                                 <textarea
                                     placeholder="Enter question text"
                                     className={`${inputClass} resize-none h-24`}
@@ -681,25 +571,25 @@ function ExamQuestions() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option A</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option A</label>
                                     <input type="text" placeholder="Option A" className={inputClass} value={editOptionA} onChange={(e) => setEditOptionA(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option B</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option B</label>
                                     <input type="text" placeholder="Option B" className={inputClass} value={editOptionB} onChange={(e) => setEditOptionB(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option C</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option C</label>
                                     <input type="text" placeholder="Option C" className={inputClass} value={editOptionC} onChange={(e) => setEditOptionC(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Option D</label>
+                                    <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Option D</label>
                                     <input type="text" placeholder="Option D" className={inputClass} value={editOptionD} onChange={(e) => setEditOptionD(e.target.value)} />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-purple-300/65 uppercase tracking-wider mb-1.5">Correct Answer</label>
+                                <label className="block text-xs font-semibold text-amber-300/65 uppercase tracking-wider mb-1.5">Correct Answer</label>
                                 <select className={inputClass} value={editCorrectAnswer} onChange={(e) => setEditCorrectAnswer(e.target.value)}>
                                     <option value="">— Select correct answer —</option>
                                     <option value="A">A</option>
@@ -713,35 +603,14 @@ function ExamQuestions() {
                         <div className="flex gap-3 mt-8 pt-6 border-t border-white/5">
                             <button
                                 onClick={() => setEditingQuestion(null)}
-                                className="
-flex-1
-px-5
-py-3
-rounded-2xl
-text-sm
-font-semibold
-transition-all
-duration-300
-border
-border-white/10
-text-purple-200
-hover:text-white
-hover:border-purple-400/30
-"
-
-style={{
-    background:
-        'linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02))',
-    boxShadow:
-        'inset 0 1px 0 rgba(255,255,255,0.04)'
-}}
+                                className="premium-btn-secondary flex-1"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={updateQuestion}
                                 disabled={loadingQuestion}
-                                className="flex-1 px-5 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex-1 px-5 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-white transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loadingQuestion ? (
                                     <>
@@ -753,10 +622,8 @@ style={{
                                     </>
                                 ) : (
                                     <>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Save Changes
+                                        <Save className="w-4 h-4" />
+                                        <span>Save Changes</span>
                                     </>
                                 )}
                             </button>

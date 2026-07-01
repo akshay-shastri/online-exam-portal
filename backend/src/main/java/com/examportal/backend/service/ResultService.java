@@ -19,10 +19,14 @@ public class ResultService {
 
     public Result saveResult(Result result) {
 
-        result.setSubmittedAt(LocalDateTime.now());
+    if (result.getStartedAt() == null) {
+        result.setStartedAt(LocalDateTime.now());
+    }
 
-        Result savedResult =
-        resultRepository.save(result);
+    result.setSubmittedAt(LocalDateTime.now());
+
+    Result savedResult =
+            resultRepository.save(result);
 
 if (
         result.getEmail() != null &&

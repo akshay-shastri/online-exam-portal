@@ -174,17 +174,32 @@ leaderboard.sort((a, b) ->
         public List<Result> getAllResults() {
 
         return resultService
-                .getAllResults();
+        .getAllResults();
         }
 
-    @GetMapping("/{email}")
-    public List<Result> getResultsByEmail(
-        @PathVariable String email
-    ) {
+        @GetMapping("/details/{id}")
+        public ResponseEntity<Result> getResultDetails(
+                @PathVariable Long id
+        ) {
 
-        return resultService
-            .getResultsByEmail(email);
-      }
+        Optional<Result> result =
+                resultRepository.findById(id);
+
+        return result
+                .map(ResponseEntity::ok)
+                .orElseGet(() ->
+                        ResponseEntity.notFound().build()
+                );
+        }
+
+        @GetMapping("/{email}")
+        public List<Result> getResultsByEmail(
+                @PathVariable String email
+        ) {
+
+                return resultService
+                .getResultsByEmail(email);
+        }
 
 
       @GetMapping("/review/{email}/{examTitle}")

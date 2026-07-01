@@ -4,6 +4,7 @@ import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
 import PremiumLoader from "../components/PremiumLoader";
+import {   LogOut,  ArrowLeft,  Camera,  PlayCircle, StopCircle,  Search,  ClipboardList, ShieldCheck, AlertTriangle,XCircle } from "lucide-react";
 
 function ExamLeaderboard() {
     const navigate = useNavigate();
@@ -69,16 +70,16 @@ function ExamLeaderboard() {
     const getRankColor = (rank) => {
         if (rank === 1) return { bg: "rgba(217,119,6,0.15)", border: "rgba(217,119,6,0.3)", text: "#fdba74", glow: "0 0 20px rgba(217,119,6,0.4)" };
         if (rank === 2) return { bg: "rgba(156,163,175,0.15)", border: "rgba(156,163,175,0.3)", text: "#d1d5db", glow: "0 0 20px rgba(156,163,175,0.3)" };
-        if (rank === 3) return { bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.2)", text: "#d8b4fe", glow: "0 0 20px rgba(167,139,250,0.2)" };
+        if (rank === 3) return { bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.2)", text: "#ffe27a", glow: "0 0 20px rgba(167,139,250,0.2)" };
         return { bg: "transparent", border: "rgba(255,255,255,0.07)", text: "#e9d5ff", glow: "none" };
     };
 
-    const getRankMedal = (rank) => {
-        if (rank === 1) return "🥇";
-        if (rank === 2) return "🥈";
-        if (rank === 3) return "🥉";
-        return `${rank}`;
-    };
+    // const getRankMedal = (rank) => {
+    //     if (rank === 1) return "🥇";
+    //     if (rank === 2) return "🥈";
+    //     if (rank === 3) return "🥉";
+    //     return `${rank}`;
+    // };
 
     const totalParticipants = filteredResults.length;
     const averageScore = totalParticipants > 0 
@@ -110,7 +111,7 @@ function ExamLeaderboard() {
     if (!exam) {
         return (
             <div className="premium-root min-h-screen flex items-center justify-center">
-                <p style={{ color: 'rgba(196,181,253,0.7)' }}>Exam not found</p>
+                <p className="text-white/70 text-lg">Exam not found</p>
             </div>
         );
     }
@@ -131,13 +132,13 @@ function ExamLeaderboard() {
                     </div>
                     <div>
                         <div className="logo-text-primary">Smart Exam Portal</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(196,181,253,0.5)', letterSpacing: '0.3px' }}>Admin Panel</div>
+                        <div className="text-white/45 text-[11px] tracking-wide">Admin Panel</div>
                     </div>
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-back-btn">
-                        ← Back
+                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-btn-secondary">
+                     <div className="flex items-center gap-2"><ArrowLeft className="w-4 h-4" /><span>Back</span></div>
                     </button>
 
                     <button
@@ -159,7 +160,7 @@ function ExamLeaderboard() {
                             <div className="dropdown-menu">
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item dropdown-item-danger" onClick={logout}>
-                                    <div className="dropdown-item-icon">🚪</div>
+                                    <div className="dropdown-item-icon"><LogOut className="w-4 h-4" /></div>
                                     <span>Logout</span>
                                 </div>
                             </div>
@@ -168,7 +169,7 @@ function ExamLeaderboard() {
                 </div>
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
+            <div className="px-6 md:px-12 py-10 max-w-[1800px] mx-auto space-y-10">
                 {/* Hero Section */}
                 <div className="mb-12 glass-hero">
                     <div className="relative z-10">
@@ -178,62 +179,79 @@ function ExamLeaderboard() {
                     </div>
 
                     <div className="flex flex-wrap gap-6 mt-8 items-start">
-                        <div style={{ background: 'rgba(124,58,237,0.15)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(167,139,250,0.15)' }}>
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Exam ID</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>#{exam.id}</p>
-                        </div>
 
-                        <div style={{ background: 'rgba(59,130,246,0.15)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(59,130,246,0.15)' }}>
-                            <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Participants</p>
-                            <p style={{ color: '#93c5fd', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{totalParticipants}</p>
-                        </div>
+                    <div className="stats-card premium-shine min-w-[220px]">
+                        <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.5px]">
+                            Exam ID
+                        </p>
 
-                        <div style={{ background: 'rgba(34,197,94,0.15)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(34,197,94,0.15)' }}>
-                            <p style={{ color: 'rgba(74,222,128,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Average Score</p>
-                            <p style={{ color: '#86efac', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{averageScore}</p>
-                        </div>
+                        <p className="text-white text-2xl font-extrabold mt-2">
+                            #{exam.id}
+                        </p>
                     </div>
+
+                    <div className="stats-card premium-shine min-w-[220px]">
+                        <p className="text-blue-300/70 text-xs font-semibold uppercase tracking-[0.5px]">
+                            Participants
+                        </p>
+
+                        <p className="text-blue-300 text-2xl font-extrabold mt-2">
+                            {totalParticipants}
+                        </p>
+                    </div>
+
+                    <div className="stats-card premium-shine min-w-[220px]">
+                        <p className="text-emerald-300/70 text-xs font-semibold uppercase tracking-[0.5px]">
+                            Average Score
+                        </p>
+
+                        <p className="text-emerald-300 text-2xl font-extrabold mt-2">
+                            {averageScore}
+                        </p>
+                    </div>
+
+                </div>
                 </div>
 
                 {/* Summary Stats Cards */}
                 {filteredResults.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
-                        <div className="rounded-xl p-5" style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.15)' }}>
-                            <p style={{ color: 'rgba(217,119,6,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>🥇 Highest Score</p>
+                        <div className="activity-violation-card premium-shine p-5">
+                            <p style={{ color: 'rgba(217,119,6,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><p className="flex items-center gap-2" style={{ color: 'rgba(217,119,6,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><Trophy className="w-4 h-4" /><span>Highest Score</span></p></p>
                             <p style={{ color: '#fdba74', fontSize: '22px', fontWeight: 800, marginTop: '8px' }}>{highestScore}</p>
                         </div>
 
-                        <div className="rounded-xl p-5" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)' }}>
-                            <p style={{ color: 'rgba(74,222,128,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>📊 Average Score</p>
+                        <div className="activity-violation-card premium-shine p-5" >
+                            <p style={{ color: 'rgba(74,222,128,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><p className="flex items-center gap-2" style={{ color: 'rgba(74,222,128,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><BarChart3 className="w-4 h-4" /><span>Average Score</span></p></p>
                             <p style={{ color: '#86efac', fontSize: '22px', fontWeight: 800, marginTop: '8px' }}>{averageScore}</p>
                         </div>
 
-                        <div className="rounded-xl p-5" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                            <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>✅ Pass Rate</p>
+                        <div className="activity-violation-card premium-shine p-5" >
+                            <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><p className="flex items-center gap-2" style={{ color: 'rgba(96,165,250,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><CheckCircle2 className="w-4 h-4" /><span>Pass Rate</span></p></p>
                             <p style={{ color: '#93c5fd', fontSize: '22px', fontWeight: 800, marginTop: '8px' }}>{passPercentage}%</p>
                         </div>
 
-                        <div className="rounded-xl p-5" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                            <p style={{ color: 'rgba(167,139,250,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>👥 Total Participants</p>
-                            <p style={{ color: '#c4b5fd', fontSize: '22px', fontWeight: 800, marginTop: '8px' }}>{totalParticipants}</p>
+                        <div className="activity-violation-card premium-shine p-5" >
+                            <p style={{ color: 'rgba(167,139,250,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><p className="flex items-center gap-2" style={{ color: 'rgba(167,139,250,0.6)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}><Award className="w-4 h-4" /><span>Total Participants</span></p></p>
+                            <p style={{ color: '#ffe27a', fontSize: '22px', fontWeight: 800, marginTop: '8px' }}>{totalParticipants}</p>
                         </div>
                     </div>
                 )}
 
                 {/* Leaderboard */}
                 {filteredResults.length === 0 ? (
-                    <div className="text-center py-24 rounded-2xl" style={{ border: '1px dashed rgba(167,139,250,0.2)', background: 'rgba(124,58,237,0.04)' }}>
-                        <svg className="w-20 h-20 mx-auto mb-4 premium-empty-icon" style={{ color: 'rgba(196,181,253,0.2)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="empty-state-card text-center py-24 premium-shine">
+                        <svg className="w-20 h-20 mx-auto mb-4 premium-empty-icon" style={{ color: 'rgba(255,216,107,0.16)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
-                        <p style={{ color: '#f3e8ff' }} className="font-semibold text-xl mb-2">No Leaderboard Data</p>
-                        <p style={{ color: 'rgba(196,181,253,0.6)' }}>No student submissions available for this exam yet.</p>
-                        <button
+                        <p style={{ color: '#ffffff' }} className="font-semibold text-xl mb-2">No Leaderboard Data</p>
+                        <p style={{ color: 'rgba(255,255,255,0.55)' }}>No student submissions available for this exam yet.</p>
+                        {/* <button
     onClick={() => navigate(`/admin/exam/${id}`)}
     className="premium-btn-primary mt-6"
 >
     Back to Exam
-</button>
+</button> */}
 
 
                     </div>
@@ -242,41 +260,40 @@ function ExamLeaderboard() {
                         {filteredResults.map((result, index) => {
                             const rank = index + 1;
                             const rankColor = getRankColor(rank);
-                            const medal = getRankMedal(rank);
                             const percentage = calculatePercentage(result.score);
                             const passed = isPassed(result.score);
 
                             return (
                                 <div
                                     key={result.id || index}
-                                    className="premium-data-card rounded-xl p-5"
-                                    style={{
-                                        background: rankColor.bg || 'linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)',
-                                        border: `1px solid ${rankColor.border}`,
-                                        transform: rank <= 3 ? 'scale(1.01)' : 'scale(1)',
-                                        boxShadow: rankColor.glow === "none" ? '0 4px 24px rgba(0,0,0,0.35)' : `${rankColor.glow}, 0 4px 24px rgba(0,0,0,0.35)`
-                                    }}
+                                    className="leaderboard-row-card premium-shine p-5"
                                 >
                                     <div className="flex items-center justify-between gap-4 flex-wrap">
                                         {/* Rank Medal */}
                                         <div className="flex items-center gap-4">
-                                            <div
-                                                className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0"
-                                                style={{
-                                                    background: rank <= 3 ? rankColor.bg : 'rgba(124,58,237,0.1)',
-                                                    border: `2px solid ${rankColor.text}`,
-                                                    color: rankColor.text
-                                                }}
+                                            <div className="leaderboard-rank-badge"                                    
                                             >
-                                                {medal}
+                                                <>
+                                                    {
+                                                        rank === 1 ? (
+                                                            <Trophy className="w-5 h-5 text-amber-300" />
+                                                        ) : rank === 2 ? (
+                                                            <Medal className="w-5 h-5 text-slate-300" />
+                                                        ) : rank === 3 ? (
+                                                            <Award className="w-5 h-5 text-orange-300" />
+                                                        ) : (
+                                                            <span>{rank}</span>
+                                                        )
+                                                    }
+                                                </>
                                             </div>
 
                                             {/* Student Info */}
                                             <div>
-                                                <p style={{ color: '#f3e8ff' }} className="font-bold text-lg">
+                                                <p style={{ color: '#ffffff' }} className="font-bold text-lg">
                                                     {result.studentName}
                                                 </p>
-                                                <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '12px', marginTop: '2px' }}>
+                                                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', marginTop: '2px' }}>
                                                     {result.submissionTime ? new Date(result.submissionTime).toLocaleString() : "No submission time"}
                                                 </p>
                                             </div>
@@ -285,15 +302,15 @@ function ExamLeaderboard() {
                                         {/* Stats */}
                                         <div className="grid grid-cols-2 md:flex md:items-center gap-5 md:gap-8">
                                             <div className="text-center">
-                                                <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>Score</p>
-                                                <p style={{ color: '#f3e8ff', fontSize: '16px', fontWeight: 700, marginTop: '4px' }}>
+                                                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>Score</p>
+                                                <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, marginTop: '4px' }}>
                                                     {result.score}
                                                 </p>
                                             </div>
 
                                             <div className="text-center">
-                                                <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>Percentage</p>
-                                                <p style={{ color: '#f3e8ff', fontSize: '16px', fontWeight: 700, marginTop: '4px' }}>
+                                                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>Percentage</p>
+                                                <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, marginTop: '4px' }}>
                                                     {percentage}%
                                                 </p>
                                             </div>
@@ -307,7 +324,19 @@ function ExamLeaderboard() {
                                                     color: passed ? '#86efac' : '#fca5a5'
                                                 }}
                                             >
-                                                {passed ? '✓ PASS' : '✗ FAIL'}
+                                                <div className="flex items-center gap-2">
+                                                    {
+                                                        passed ? (
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                        ) : (
+                                                            <XCircle className="w-4 h-4" />
+                                                        )
+                                                    }
+
+                                                    <span>
+                                                        {passed ? "PASS" : "FAIL"}
+                                                    </span>
+                                                </div>
                                             </span>
                                         </div>
                                     </div>
@@ -333,24 +362,24 @@ function ExamLeaderboard() {
 
                 {/* Ranking Legend */}
                 {filteredResults.length > 0 && (
-                    <div className="mt-12 rounded-2xl p-6" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(167,139,250,0.12)' }}>
-                        <h3 className="text-sm font-bold mb-4" style={{ color: '#f3e8ff' }}>📋 Ranking Information</h3>
+                    <div className="activity-violation-card premium-shine mt-12 p-8">
+                        <h3 className="premium-section-title text-xl mb-6" style={{ color: '#ffffff' }}><div className="flex items-center gap-3"><BarChart3 className="w-5 h-5 text-amber-300" /><span>Ranking Information</span></div></h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <p style={{ color: 'rgba(217,119,6,0.7)', fontSize: '12px', fontWeight: 600 }}>🥇 First Place</p>
+                                <p style={{ color: 'rgba(217,119,6,0.7)', fontSize: '12px', fontWeight: 600 }}><p className="flex items-center gap-2" style={{ color: 'rgba(217,119,6,0.7)', fontSize: '12px', fontWeight: 600 }}><Trophy className="w-4 h-4" /><span>First Place</span></p></p>
                                 <p style={{ color: '#fdba74', marginTop: '8px', fontSize: '14px' }}>
                                     {filteredResults[0]?.studentName || "N/A"} - {filteredResults[0]?.score} pts
                                 </p>
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(156,163,175,0.7)', fontSize: '12px', fontWeight: 600 }}>🥈 Second Place</p>
+                                <p style={{ color: 'rgba(156,163,175,0.7)', fontSize: '12px', fontWeight: 600 }}><p className="flex items-center gap-2" style={{ color: 'rgba(156,163,175,0.7)', fontSize: '12px', fontWeight: 600 }}><Medal className="w-4 h-4" /><span>Second Place</span></p></p>
                                 <p style={{ color: '#d1d5db', marginTop: '8px', fontSize: '14px' }}>
                                     {filteredResults[1]?.studentName || "N/A"} - {filteredResults[1]?.score || 0} pts
                                 </p>
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(167,139,250,0.7)', fontSize: '12px', fontWeight: 600 }}>🥉 Third Place</p>
-                                <p style={{ color: '#d8b4fe', marginTop: '8px', fontSize: '14px' }}>
+                                <p style={{ color: 'rgba(167,139,250,0.7)', fontSize: '12px', fontWeight: 600 }}><p className="flex items-center gap-2" style={{ color: 'rgba(167,139,250,0.7)', fontSize: '12px', fontWeight: 600 }}><Award className="w-4 h-4" /><span>Third Place</span></p></p>
+                                <p style={{ color: '#ffe27a', marginTop: '8px', fontSize: '14px' }}>
                                     {filteredResults[2]?.studentName || "N/A"} - {filteredResults[2]?.score || 0} pts
                                 </p>
                             </div>

@@ -17,6 +17,8 @@ public class Result {
 
     private String examTitle;
 
+    private String examType;
+
     private double score;
 
     private int totalQuestions;
@@ -24,6 +26,8 @@ public class Result {
     private double percentage;
 
     private String email;
+
+    private LocalDateTime startedAt;
 
     @Lob
     @Column(columnDefinition = "LONGTEXT")
@@ -158,5 +162,21 @@ public class Result {
             String violationTimelineJson
     ) {
         this.violationTimelineJson = violationTimelineJson;
+    }
+
+    public LocalDateTime getStartedAt() {
+    return startedAt;
+    }
+
+    public void setStartedAt(LocalDateTime startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public String getExamType() {
+    return examType;
+    }
+
+    public void setExamType(String examType) {
+        this.examType = examType;
     }
 }

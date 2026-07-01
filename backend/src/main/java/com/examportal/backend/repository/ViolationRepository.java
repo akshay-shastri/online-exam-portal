@@ -9,4 +9,9 @@ public interface ViolationRepository
         Violation,
         Long
         > {
+
+    long countByStudentNameAndExamTitle(
+            String studentName,
+            String examTitle
+    );
 }

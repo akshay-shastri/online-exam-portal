@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { LogOut, FileText, BarChart3,Users, Camera,BookOpenCheck, Trophy, Activity,ArrowRight, Info,ShieldCheck} from "lucide-react";import { useNavigate, useParams } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
@@ -49,65 +49,71 @@ function ExamDetails() {
     };
 
     const featureCards = [
-        {
-            id: "questions",
-            icon: "📝",
-            title: "Edit Questions",
-            description: "Manage, add, or edit exam questions",
-            route: `/admin/exam/${id}/questions`,
-            color: "from-violet-500 to-purple-600"
-        },
-        {
-            id: "activity",
-            icon: "📊",
-            title: "View Activity",
-            description: "Monitor student exam attempts and submissions",
-            route: `/admin/exam/${id}/activity`,
-            color: "from-cyan-500 to-blue-600"
-        },
-        {
-            id: "face-logs",
-            icon: "📸",
-            title: "Face Verification Logs",
-            description: "Review facial recognition records",
-            route: `/admin/exam/${id}/face-logs`,
-            color: "from-pink-500 to-rose-600"
-        },
-        {
-            id: "leaderboard",
-            icon: "🏆",
-            title: "Leaderboard",
-            description: "View student rankings and scores",
-            route: `/admin/exam/${id}/leaderboard`,
-            color: "from-amber-500 to-orange-600"
-        },
-        {
-            id: "live-monitor",
-            icon: "🟢",
-            title: "Live Monitoring",
-            description: "Monitor active students in real-time",
-            route: `/admin/exam/${id}/live-monitor`,
-            color: "from-emerald-500 to-green-600"
-        }
+    {
+        id: "questions",
+        icon: <FileText className="w-7 h-7" />,
+        title: "Edit Questions",
+        description: "Manage, add, or edit exam questions",
+        route: `/admin/exam/${id}/questions`,
+        color: "from-amber-500 to-amber-600"
+    },
+    {
+        id: "activity",
+        icon: <BarChart3 className="w-7 h-7" />,
+        title: "View Activity",
+        description: "Monitor student exam attempts and submissions",
+        route: `/admin/exam/${id}/activity`,
+        color: "from-cyan-500 to-blue-600"
+    },
+    {
+        id: "face-logs",
+        icon: <Camera className="w-7 h-7" />,
+        title: "Face Verification Logs",
+        description: "Review facial recognition records",
+        route: `/admin/exam/${id}/face-logs`,
+        color: "from-yellow-500 to-rose-600"
+    },
+    {
+        id: "leaderboard",
+        icon: <Trophy className="w-7 h-7" />,
+        title: "Leaderboard",
+        description: "View student rankings and scores",
+        route: `/admin/exam/${id}/leaderboard`,
+        color: "from-amber-500 to-orange-600"
+    },
+    {
+        id: "live-monitor",
+        icon: <Activity className="w-7 h-7" />,
+        title: "Live Monitoring",
+        description: "Monitor active students in real-time",
+        route: `/admin/exam/${id}/live-monitor`,
+        color: "from-emerald-500 to-green-600"
+    },
 
+    {
+        id: "candidates",
+        icon: <Users className="w-7 h-7" />,
+        title: "Candidate Analytics",
+        description: "Performance, timeline and face verification",
+        route: `/admin/exam/${id}/candidates`,
+        color: "from-amber-500 to-yellow-600"
+    }
     ];
 
     if (loading) {
-       return (
-
-    <PremiumLoader
-        title="Loading Exam Details..."
-        subtitle="Preparing examination analytics and controls."
-        height="100vh"
-    />
-
-);
+        return (
+            <PremiumLoader
+                title="Loading Exam Details..."
+                subtitle="Preparing examination analytics and controls."
+                height="100vh"
+            />
+        );
     }
 
     if (!exam) {
         return (
             <div className="premium-root min-h-screen flex items-center justify-center">
-                <p style={{ color: 'rgba(196,181,253,0.7)' }}>Exam not found</p>
+                <p className="text-white/70 text-lg">Exam not found</p>
             </div>
         );
     }
@@ -128,13 +134,13 @@ function ExamDetails() {
                     </div>
                     <div>
                         <div className="logo-text-primary">Smart Exam Portal</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(196,181,253,0.5)', letterSpacing: '0.3px' }}>Admin Panel</div>
+                        <div className="text-white/45 text-[11px] tracking-wide">Admin Panel</div>
                     </div>
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate("/admin-dashboard")} className="premium-back-btn">
-                        ← Back
+                    <button onClick={() => navigate("/admin-dashboard")} className="premium-btn-secondary">
+                        <div className="flex items-center gap-2"><ArrowRight className="w-4 h-4 rotate-180" /><span>Back</span></div>
                     </button>
 
                     <button
@@ -156,7 +162,7 @@ function ExamDetails() {
                             <div className="dropdown-menu">
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item dropdown-item-danger" onClick={logout}>
-                                    <div className="dropdown-item-icon">🚪</div>
+                                    <div className="dropdown-item-icon"> <LogOut className="w-4 h-4" /></div>
                                     <span>Logout</span>
                                 </div>
                             </div>
@@ -165,145 +171,95 @@ function ExamDetails() {
                 </div>
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
-                {/* Hero Section */}
+            <div className="px-6 md:px-12 py-10 max-w-[1800px] mx-auto space-y-10">
+               {/* Hero Section */}
                 <div className="mb-12 glass-hero">
                     <div className="relative z-10">
                         <span className="hero-accent">Exam Management</span>
                         <h2 className="hero-title">{exam.title}</h2>
                         <p className="hero-sub">Manage questions, monitor activity, and review exam records.</p>
-                    </div>
+                </div>
+
                     
                     <div className="flex flex-wrap gap-6 mt-8 items-start">
-                        <div className="stats-card">
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Exam ID</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>#{exam.id}</p>
+                        <div className="stats-card premium-shine">
+                            <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Exam ID</p>
+                            <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>#{exam.id}</p>
                         </div>
-                        <div className="stats-card">
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duration</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{exam.duration} min</p>
+                        <div className="stats-card premium-shine">
+                            <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duration</p>
+                            <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{exam.duration} min</p>
                         </div>
-                        <div className="stats-card">
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</p>
+                        <div className="stats-card premium-shine">
+                            <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</p>
                             <p style={{ color: '#86efac', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>Active</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Feature Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {featureCards.map((card) => (
                         <div
                             key={card.id}
                             onClick={() => navigate(card.route)}
-                            className="group cursor-pointer relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2"
-                            style={{
-                                background: 'linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)',
-                                border: '1px solid rgba(255,255,255,0.07)',
-                                boxShadow: '0 4px 24px rgba(0,0,0,0.35)'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.boxShadow = '0 12px 48px rgba(124,58,237,0.25)';
-                                e.currentTarget.style.borderColor = 'rgba(167,139,250,0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.35)';
-                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
-                            }}
+                            className="exam-feature-card premium-shine group"
                         >
-                            {/* Gradient accent line */}
-                            <div
-                                className="h-1 w-full"
-                                style={{
-                                    background: `linear-gradient(90deg, var(--tw-gradient-stops))`,
-                                    '--tw-gradient-from': card.color.split(' ')[1],
-                                    '--tw-gradient-to': card.color.split(' ')[3],
-                                    background: card.color.includes('violet') 
-                                        ? 'linear-gradient(90deg, #a78bfa, #c084fc)' 
-                                        : card.color.includes('cyan')
-                                        ? 'linear-gradient(90deg, #06b6d4, #3b82f6)'
-                                        : card.color.includes('pink')
-                                        ? 'linear-gradient(90deg, #ec4899, #f43f5e)'
-                                        : 'linear-gradient(90deg, #f59e0b, #fb923c)'
-                                }}
-                            />
+                            <div className="exam-feature-top-line" />
 
-                            <div className="p-7 flex flex-col h-full">
-                                {/* Icon */}
-                                <div
-                                    className="w-14 h-14 rounded-lg flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
-                                    style={{
-                                        background: card.color.includes('violet')
-                                            ? 'linear-gradient(135deg, rgba(167,139,250,0.25), rgba(196,181,253,0.1))'
-                                            : card.color.includes('cyan')
-                                            ? 'linear-gradient(135deg, rgba(34,211,238,0.25), rgba(96,165,250,0.1))'
-                                            : card.color.includes('pink')
-                                            ? 'linear-gradient(135deg, rgba(244,114,182,0.25), rgba(251,113,133,0.1))'
-                                            : 'linear-gradient(135deg, rgba(217,119,6,0.25), rgba(245,158,11,0.1))',
-                                        border: '1px solid rgba(167,139,250,0.2)',
-                                        fontSize: '32px'
-                                    }}
-                                >
+                            <div className="exam-feature-content">
+                                <div className="exam-feature-icon">
                                     {card.icon}
                                 </div>
 
-                                {/* Title */}
-                                <h3 className="text-lg font-bold mb-2 transition-colors duration-300 group-hover:text-purple-300" style={{ color: '#f3e8ff' }}>
-                                    {card.title}
-                                </h3>
+                                <div className="space-y-3">
+                                    <h3 className="exam-feature-title">
+                                        {card.title}
+                                    </h3>
 
-                                {/* Description */}
-                                <p
-                                    className="text-sm leading-relaxed flex-1 mb-4 transition-colors duration-300"
-                                    style={{ color: 'rgba(196,181,253,0.7)' }}
-                                >
-                                    {card.description}
-                                </p>
+                                    <p className="exam-feature-description">
+                                        {card.description}
+                                    </p>
+                                </div>
 
-                                {/* Arrow CTA */}
-                                <div
-                                    className="flex items-center gap-2 text-sm font-semibold transition-all duration-300 group-hover:translate-x-1"
-                                    style={{ color: 'rgba(196,181,253,0.8)' }}
-                                >
+                                <div className="exam-feature-action">
                                     <span>Access</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    <svg
+                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 5l7 7-7 7"
+                                        />
                                     </svg>
                                 </div>
                             </div>
-
-                            {/* Hover glow effect */}
-                            <div
-                                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                                style={{
-                                    background: card.color.includes('violet')
-                                        ? 'radial-gradient(circle at 30% 30%, rgba(167,139,250,0.15), transparent 70%)'
-                                        : card.color.includes('cyan')
-                                        ? 'radial-gradient(circle at 30% 30%, rgba(34,211,238,0.15), transparent 70%)'
-                                        : card.color.includes('pink')
-                                        ? 'radial-gradient(circle at 30% 30%, rgba(244,114,182,0.15), transparent 70%)'
-                                        : 'radial-gradient(circle at 30% 30%, rgba(217,119,6,0.15), transparent 70%)'
-                                }}
-                            />
                         </div>
                     ))}
                 </div>
 
                 {/* Info Section */}
-                <div className="mt-12 rounded-2xl p-6" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(167,139,250,0.12)' }}>
-                    <h3 className="text-sm font-bold mb-3" style={{ color: '#f3e8ff' }}>ℹ️ About This Exam</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                            <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Positive Marks</p>
-                            <p style={{ color: '#f3e8ff', marginTop: '4px', fontSize: '16px', fontWeight: 700 }}>{exam.positiveMarks || 1}</p>
+                <div className="activity-violation-card premium-shine mt-12 p-8">
+                    <h3 className="premium-section-title text-xl mb-6 flex items-center gap-3" style={{ color: '#ffffff' }}> <Info className="w-5 h-5 text-amber-300" /><span>About This Exam</span></h3>
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+                        <div className="flex flex-col items-center text-center">
+                            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.08em' }}>Positive Marks</p>
+                            <p style={{ color: '#ffffff', marginTop: '10px', fontSize: '28px', fontWeight: 800 }}>{exam.positiveMarks || 1}</p>
                         </div>
-                        <div>
-                            <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Negative Marks</p>
-                            <p style={{ color: '#f3e8ff', marginTop: '4px', fontSize: '16px', fontWeight: 700 }}>{exam.negativeMarks || 0}</p>
+
+                        <div className="flex flex-col items-center text-center">
+                            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.08em' }}>Negative Marks</p>
+                            <p style={{ color: '#ffffff', marginTop: '10px', fontSize: '28px', fontWeight: 800 }}>{exam.negativeMarks || 0}</p>
                         </div>
-                        <div>
-                            <p style={{ color: 'rgba(196,181,253,0.5)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Status</p>
-                            <p style={{ color: '#86efac', marginTop: '4px', fontSize: '16px', fontWeight: 700 }}>{exam.active ? '✓ Active' : '✗ Inactive'}</p>
+
+                        <div className="flex flex-col items-center text-center">
+                            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.08em' }}>Status</p>
+                            <div className="flex items-center gap-2 mt-3" style={{ color: '#86efac', fontSize: '18px', fontWeight: 700 }}><ShieldCheck className="w-4 h-4" /><span>{exam.active ? "Active" : "Inactive"}</span></div>
                         </div>
                     </div>
                 </div>

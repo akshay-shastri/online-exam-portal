@@ -4,6 +4,7 @@ import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
 import PremiumLoader from "../components/PremiumLoader";
+import { LogOut, ArrowLeft,  Camera,PlayCircle, StopCircle, Search, ClipboardList,ShieldCheck, AlertTriangle,XCircle} from "lucide-react";
 
 function ExamFaceLogs() {
     const navigate = useNavigate();
@@ -70,7 +71,7 @@ function ExamFaceLogs() {
         if (!log.startFaceImage && log.endFaceImage) {
             return { status: "Face Changed", color: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.2)", text: "#fca5a5" };
         }
-        return { status: "No Images", color: "rgba(167,139,250,0.15)", border: "rgba(167,139,250,0.2)", text: "#c4b5fd" };
+        return { status: "No Images", color: "rgba(167,139,250,0.15)", border: "rgba(255,216,107,0.12)", text: "#ffe27a" };
     };
 
     const logout = () => {
@@ -95,7 +96,7 @@ function ExamFaceLogs() {
     if (!exam) {
         return (
             <div className="premium-root min-h-screen flex items-center justify-center">
-                <p style={{ color: 'rgba(196,181,253,0.7)' }}>Exam not found</p>
+                <p className="text-white/70 text-lg">Exam not found</p>
             </div>
         );
     }
@@ -116,13 +117,13 @@ function ExamFaceLogs() {
                     </div>
                     <div>
                         <div className="logo-text-primary">Smart Exam Portal</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(196,181,253,0.5)', letterSpacing: '0.3px' }}>Admin Panel</div>
+                        <div className="text-white/45 text-[11px] tracking-wide">Admin Panel</div>
                     </div>
                 </div>
 
                 <div className="relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-back-btn">
-                        ← Back
+                    <button onClick={() => navigate(`/admin/exam/${id}`)} className="premium-btn-secondary">
+                     <div className="flex items-center gap-2"><ArrowLeft className="w-4 h-4" /><span>Back</span></div>
                     </button>
 
                     <button
@@ -144,7 +145,7 @@ function ExamFaceLogs() {
                             <div className="dropdown-menu">
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item dropdown-item-danger" onClick={logout}>
-                                    <div className="dropdown-item-icon">🚪</div>
+                                    <div className="dropdown-item-icon"><LogOut className="w-4 h-4" /></div>
                                     <span>Logout</span>
                                 </div>
                             </div>
@@ -153,7 +154,7 @@ function ExamFaceLogs() {
                 </div>
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-screen-2xl mx-auto">
+            <div className="px-6 md:px-12 py-10 max-w-[1800px] mx-auto space-y-10">
                 {/* Hero Section */}
                 <div className="mb-12 glass-hero">
                     <div className="relative z-10">
@@ -163,33 +164,45 @@ function ExamFaceLogs() {
                     </div>
 
                     <div className="flex flex-wrap gap-6 mt-8 items-start">
-                        <div style={{ background: 'rgba(124,58,237,0.15)', backdropFilter: 'blur(14px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(167,139,250,0.15)' }}>
-                            <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Exam ID</p>
-                            <p style={{ color: '#f3e8ff', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>#{exam.id}</p>
-                        </div>
 
-                        <div style={{ background: 'rgba(59,130,246,0.15)', backdropFilter: 'blur(14px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(59,130,246,0.15)' }}>
-                            <p style={{ color: 'rgba(96,165,250,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Face Logs</p>
-                            <p style={{ color: '#93c5fd', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>{filteredLogs.length}</p>
-                        </div>
+    <div className="stats-card premium-shine min-w-[220px]">
+        <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.5px]">
+            Exam ID
+        </p>
 
-                        <div style={{ background: 'rgba(34,197,94,0.15)', backdropFilter: 'blur(14px)', borderRadius: '16px', padding: '16px 20px', border: '1px solid rgba(34,197,94,0.15)' }}>
-                            <p style={{ color: 'rgba(74,222,128,0.6)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Verified</p>
-                            <p style={{ color: '#86efac', fontSize: '20px', fontWeight: 800, marginTop: '6px' }}>
-                                {filteredLogs.filter(l => l.startFaceImage && l.endFaceImage).length}
-                            </p>
-                        </div>
-                    </div>
+        <p className="text-white text-2xl font-extrabold mt-2">
+            #{exam.id}
+        </p>
+    </div>
+
+    <div className="stats-card premium-shine min-w-[220px]">
+        <p className="text-blue-300/70 text-xs font-semibold uppercase tracking-[0.5px]">
+            Face Logs
+        </p>
+
+        <p className="text-blue-300 text-2xl font-extrabold mt-2">
+            {filteredLogs.length}
+        </p>
+    </div>
+
+    <div className="stats-card premium-shine min-w-[220px]">
+        <p className="text-emerald-300/70 text-xs font-semibold uppercase tracking-[0.5px]">
+            Verified
+        </p>
+
+        <p className="text-emerald-300 text-2xl font-extrabold mt-2">
+            {filteredLogs.filter(l => l.startFaceImage && l.endFaceImage).length}
+        </p>
+    </div>
+
+</div>
                 </div>
 
                 {/* Face Logs Grid */}
                 {filteredLogs.length === 0 ? (
-                    <div className="text-center py-24 rounded-2xl" style={{ border: '1px dashed rgba(167,139,250,0.2)', background: 'rgba(124,58,237,0.04)' }}>
-                        <svg className="w-20 h-20 mx-auto mb-4" style={{ color: 'rgba(196,181,253,0.2)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <p style={{ color: '#f3e8ff' }} className="font-semibold text-xl mb-2">No Face Verification Logs</p>
+                    <div className="empty-state-card text-center py-24 premium-shine">                       
+                     <Camera className="w-20 h-20 mx-auto mb-4 text-violet-300/20" />
+                        <p style={{ color: '#ffffff' }} className="font-semibold text-xl mb-2">No Face Verification Logs</p>
                         <p style={{ color: 'rgba(196,181,253,0.6)' }}>No facial recognition data available for this exam yet.</p>
                     </div>
                 ) : (
@@ -200,18 +213,13 @@ function ExamFaceLogs() {
                             return (
                                 <div
                                     key={log.id || index}
-                                    className="premium-data-card rounded-2xl p-6"
-                                    style={{
-                                        background: 'linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)',
-                                        border: '1px solid rgba(255,255,255,0.07)',
-                                        boxShadow: '0 4px 24px rgba(0,0,0,0.35)'
-                                    }}
+                                    className="activity-violation-card premium-shine p-6"
                                 
                                 >
                                     {/* Header */}
                                     <div className="flex items-center justify-between mb-6 pb-6 border-b border-white/10">
                                         <div>
-                                            <h3 style={{ color: '#f3e8ff' }} className="font-bold text-lg">
+                                            <h3 style={{ color: '#ffffff' }} className="font-bold text-lg">
                                                 {log.studentName}
                                             </h3>
                                             <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '13px', marginTop: '4px' }}>
@@ -235,17 +243,11 @@ function ExamFaceLogs() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* Start Exam Face */}
                                         <div className="flex flex-col">
-                                            <p style={{ color: 'rgba(196,181,253,0.7)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '12px' }}>
-                                                🟢 Start Snapshot
-                                            </p>
+                                            <p className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.70)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '12px' }}><PlayCircle className="w-4 h-4 text-emerald-400" /><span>Start Snapshot</span></p>
                                             {log.startFaceImage ? (
                                                 <div
-                                                    className="relative group cursor-pointer rounded-xl overflow-hidden"
-                                                    style={{
-                                                        border: '1px solid rgba(167,139,250,0.25)',
-                                                        aspectRatio: '4/3',
-                                                        background: 'rgba(124,58,237,0.1)'
-                                                    }}
+                                                    className="face-snapshot-card relative group cursor-pointer overflow-hidden"
+        
                                                     onClick={() => setExpandedImage(log.startFaceImage)}
                                                 >
                                                     <img
@@ -257,36 +259,26 @@ function ExamFaceLogs() {
                                                         className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                                         style={{ background: 'rgba(0,0,0,0.5)' }}
                                                     >
-                                                        <span style={{ color: '#f3e8ff', fontSize: '12px', fontWeight: 600 }}>🔍 View</span>
+                                                        <span style={{ color: '#ffffff', fontSize: '12px', fontWeight: 600 }}><div className="flex items-center gap-2"><Search className="w-4 h-4" /><span>View</span></div></span>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div
-                                                    className="rounded-xl flex items-center justify-center"
-                                                    style={{
-                                                        border: '1px dashed rgba(167,139,250,0.2)',
-                                                        aspectRatio: '4/3',
-                                                        background: 'rgba(124,58,237,0.05)'
-                                                    }}
+                                                    className="face-empty-card flex items-center justify-center"
+                                                   
                                                 >
-                                                    <p style={{ color: 'rgba(196,181,253,0.4)', fontSize: '13px' }}>No snapshot available</p>
+                                                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: '13px' }}>No snapshot available</p>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* End Exam Face */}
                                         <div className="flex flex-col">
-                                            <p style={{ color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '12px' }}>
-                                                🔴 End Snapshot
-                                            </p>
+                                           <p className="flex items-center gap-2" style={{ color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '12px' }}><StopCircle className="w-4 h-4 text-red-400" /><span>End Snapshot</span></p>
                                             {log.endFaceImage ? (
                                                 <div
-                                                    className="relative group cursor-pointer rounded-xl overflow-hidden"
-                                                    style={{
-                                                        border: '1px solid rgba(239,68,68,0.25)',
-                                                        aspectRatio: '4/3',
-                                                        background: 'rgba(239,68,68,0.1)'
-                                                    }}
+                                                    className="face-snapshot-card relative group cursor-pointer overflow-hidden"
+                                                    
                                                     onClick={() => setExpandedImage(log.endFaceImage)}
                                                 >
                                                     <img
@@ -298,17 +290,13 @@ function ExamFaceLogs() {
                                                         className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                                         style={{ background: 'rgba(0,0,0,0.5)' }}
                                                     >
-                                                        <span style={{ color: '#f3e8ff', fontSize: '12px', fontWeight: 600 }}>🔍 View</span>
+                                                        <span style={{ color: '#ffffff', fontSize: '12px', fontWeight: 600 }}><div className="flex items-center gap-2"><Search className="w-4 h-4" /><span>View</span></div></span>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div
-                                                    className="rounded-xl flex items-center justify-center"
-                                                    style={{
-                                                        border: '1px dashed rgba(239,68,68,0.2)',
-                                                        aspectRatio: '4/3',
-                                                        background: 'rgba(239,68,68,0.05)'
-                                                    }}
+                                                    className="face-empty-card flex items-center justify-center"
+                                                   
                                                 >
                                                     <p style={{ color: 'rgba(239,68,68,0.4)', fontSize: '13px' }}>No snapshot available</p>
                                                 </div>
@@ -329,18 +317,15 @@ function ExamFaceLogs() {
                         onClick={() => setExpandedImage(null)}
                     >
                         <div
-                            className="rounded-[28px] overflow-hidden max-w-3xl w-full premium-data-card"
+                            className="face-modal-card max-w-3xl w-full"
                             onClick={(e) => e.stopPropagation()}
-                            style={{
-                                border: '1px solid rgba(167,139,250,0.3)',
-                                boxShadow: '0 24px 96px rgba(124,58,237,0.3)'
-                            }}
+                            
                         >
                             <img src={expandedImage} alt="Expanded Face Snapshot" className="w-full h-auto object-cover transition-transform duration-500 hover:scale-[1.02]" />
-                            <div className="text-center py-4" style={{ background: 'rgba(7,7,13,0.9)', borderTop: '1px solid rgba(167,139,250,0.2)' }}>
+                            <div className="text-center py-4" style={{ background: 'rgba(7,7,13,0.9)', borderTop: '1px solid rgba(255,216,107,0.12)' }}>
                                 <button
                                     onClick={() => setExpandedImage(null)}
-                                    style={{ color: 'rgba(196,181,253,0.7)', fontSize: '12px' }}
+                                    style={{ color: 'rgba(255,255,255,0.70)', fontSize: '12px' }}
                                     className="hover:text-white transition-colors"
                                 >
                                     Press ESC or click to close
@@ -352,25 +337,25 @@ function ExamFaceLogs() {
 
                 {/* Info Section */}
                 {filteredLogs.length > 0 && (
-                    <div className="mt-12 rounded-2xl p-6" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(167,139,250,0.12)' }}>
-                        <h3 className="text-sm font-bold mb-4" style={{ color: '#f3e8ff' }}>📋 Verification Summary</h3>
+                    <div className="activity-violation-card premium-shine mt-12 p-8" >
+                        <h3 className="text-sm font-bold mb-4 flex items-center gap-2" style={{ color: '#ffffff' }}><ClipboardList className="w-4 h-4 text-amber-300" /><span>Verification Summary</span></h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <p style={{ color: 'rgba(34,197,94,0.7)', fontSize: '12px', fontWeight: 600 }}>✅ Fully Verified</p>
+                                <p style={{ color: 'rgba(34,197,94,0.7)', fontSize: '12px', fontWeight: 600 }}><p className="flex items-center gap-2" style={{ color: 'rgba(34,197,94,0.7)', fontSize: '12px', fontWeight: 600 }}><ShieldCheck className="w-4 h-4" /><span>Fully Verified</span></p></p>
                                 <p style={{ color: '#86efac', marginTop: '8px', fontSize: '18px', fontWeight: 700 }}>
                                     {filteredLogs.filter(l => l.startFaceImage && l.endFaceImage).length}
                                 </p>
                                 <p style={{ color: 'rgba(34,197,94,0.5)', fontSize: '12px', marginTop: '2px' }}>Both snapshots available</p>
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(234,179,8,0.7)', fontSize: '12px', fontWeight: 600 }}>⚠️ Incomplete</p>
+                                <p style={{ color: 'rgba(234,179,8,0.7)', fontSize: '12px', fontWeight: 600 }}><p className="flex items-center gap-2" style={{ color: 'rgba(234,179,8,0.7)', fontSize: '12px', fontWeight: 600 }}><AlertTriangle className="w-4 h-4" /><span>Incomplete</span></p></p>
                                 <p style={{ color: '#fde047', marginTop: '8px', fontSize: '18px', fontWeight: 700 }}>
                                     {filteredLogs.filter(l => (l.startFaceImage && !l.endFaceImage) || (!l.startFaceImage && l.endFaceImage)).length}
                                 </p>
                                 <p style={{ color: 'rgba(234,179,8,0.5)', fontSize: '12px', marginTop: '2px' }}>Missing snapshot</p>
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: 600 }}>❌ No Data</p>
+                                <p style={{ color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: 600 }}><p className="flex items-center gap-2" style={{ color: 'rgba(239,68,68,0.7)', fontSize: '12px', fontWeight: 600 }}><XCircle className="w-4 h-4" /><span>No Data</span></p></p>
                                 <p style={{ color: '#fca5a5', marginTop: '8px', fontSize: '18px', fontWeight: 700 }}>
                                     {filteredLogs.filter(l => !l.startFaceImage && !l.endFaceImage).length}
                                 </p>

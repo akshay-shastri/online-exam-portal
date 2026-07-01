@@ -87,18 +87,18 @@ public class ReminderScheduler {
 
     try {
 
-        emailService
-                .sendReminderEmail(
-                        user.getEmail(),
-                        user.getName(),
-                        exam.getTitle(),
-                        exam.getStartTime()
-    .format(
-        java.time.format.DateTimeFormatter.ofPattern(
-            "dd MMM yyyy hh:mm a"
-        )
-    )
-                );
+//         emailService
+//                 .sendReminderEmail(
+//                         user.getEmail(),
+//                         user.getName(),
+//                         exam.getTitle(),
+//                         exam.getStartTime()
+//     .format(
+//         java.time.format.DateTimeFormatter.ofPattern(
+//             "dd MMM yyyy hh:mm a"
+//         )
+//     )
+//                 );
 
         Notification notification =
                 new Notification();

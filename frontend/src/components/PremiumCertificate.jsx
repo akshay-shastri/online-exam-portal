@@ -1,14 +1,14 @@
 import React from "react";
-
+import { Trophy, ShieldCheck } from "lucide-react";
 export default function PremiumCertificate({
     result,
     userName
 }) {
     // Exact color palette matched from the certificate image
     const colors = {
-        purpleDark: "#231145",
-        purpleMedium: "#3d1d75",
-        purpleLight: "#5a32a3",
+        amberDark: "#231145",
+        amberMedium: "#3d1d75",
+        amberLight: "#5a32a3",
         goldMain: "#c59d3f",
         goldLight: "#e9ca7a",
         textNavy: "#061a33",
@@ -23,14 +23,14 @@ export default function PremiumCertificate({
             id="premium-certificate"
             style={{
                 backgroundImage: `
-linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)),
-repeating-linear-gradient(
-0deg,
-transparent,
-transparent 2px,
-rgba(0,0,0,0.01) 3px
-)
-`,
+                linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)),
+                repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.01) 3px
+                )
+                `,
                 boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
                 width: "1123px",
                 height: "794px",
@@ -39,6 +39,7 @@ rgba(0,0,0,0.01) 3px
                 fontFamily: "'Georgia', 'Times New Roman', serif",
                 boxSizing: "border-box",
                 overflow: "hidden",
+                isolation: "isolate",
                 userSelect: "none"
             }}
         >
@@ -51,6 +52,8 @@ rgba(0,0,0,0.01) 3px
                 <path d="M0,615 Q300,465 700,565 T1300,415" fill="none" stroke={colors.bgWaves} strokeWidth="1" />
             </svg>
 
+            <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at center, rgba(197,157,63,0.10), transparent 62%)", zIndex: 1, pointerEvents: "none" }} />
+
             {/* ====== LUXURY PURPLE AND GOLD CORNER DRAPERIES ====== */}
             {/* Top Left Corner */}
             <svg width="340" height="240" style={{ position: "absolute", top: 0, left: 0, zIndex: 5 }}>
@@ -58,9 +61,9 @@ rgba(0,0,0,0.01) 3px
                 <path d="M 0,38 Q 95,38 152,95 Q 210,152 210,240" fill="none" stroke={colors.goldMain} strokeWidth="1.5" />
                 <path d="M 0,44 Q 90,44 144,98 Q 198,152 198,240" fill="none" stroke={colors.goldLight} strokeWidth="1" />
                 {/* Main drapery shapes using smooth cubic and quadratic beziers */}
-                <path d="M 0,0 L 260,0 C 190,40 130,90 80,180 C 40,120 0,60 0,0 Z" fill={colors.purpleMedium} />
-                <path d="M 0,0 L 210,0 C 150,35 100,80 55,160 C 25,100 0,50 0,0 Z" fill={colors.purpleDark} />
-                <path d="M 0,0 L 140,0 C 95,25 60,60 30,120 C 12,70 0,35 0,0 Z" fill={colors.purpleLight} />
+                <path d="M 0,0 L 260,0 C 190,40 130,90 80,180 C 40,120 0,60 0,0 Z" fill={colors.amberMedium} />
+                <path d="M 0,0 L 210,0 C 150,35 100,80 55,160 C 25,100 0,50 0,0 Z" fill={colors.amberDark} />
+                <path d="M 0,0 L 140,0 C 95,25 60,60 30,120 C 12,70 0,35 0,0 Z" fill={colors.amberLight} />
                 {/* Inner Sharp Frame Line */}
                 <path d="M 12,12 L 280,12 C 220,45 155,105 105,210 L 12,90 Z" fill="none" stroke={colors.goldMain} strokeWidth="2" />
                 {/* Left side border segment */}
@@ -71,17 +74,17 @@ rgba(0,0,0,0.01) 3px
             <svg width="340" height="240" style={{ position: "absolute", top: 0, right: 0, zIndex: 5 }}>
                 <path d="M 340,38 Q 245,38 188,95 Q 130,152 130,240" fill="none" stroke={colors.goldMain} strokeWidth="1.5" />
                 <path d="M 340,44 Q 250,44 196,98 Q 142,152 142,240" fill="none" stroke={colors.goldLight} strokeWidth="1" />
-                <path d="M 340,0 L 80,0 C 150,40 210,90 260,180 C 300,120 340,60 340,0 Z" fill={colors.purpleMedium} />
-                <path d="M 340,0 L 130,0 C 190,35 240,80 285,160 C 315,100 340,50 340,0 Z" fill={colors.purpleDark} />
-                <path d="M 340,0 L 200,0 C 245,25 280,60 310,120 C 328,70 340,35 340,0 Z" fill={colors.purpleLight} />
+                <path d="M 340,0 L 80,0 C 150,40 210,90 260,180 C 300,120 340,60 340,0 Z" fill={colors.amberMedium} />
+                <path d="M 340,0 L 130,0 C 190,35 240,80 285,160 C 315,100 340,50 340,0 Z" fill={colors.amberDark} />
+                <path d="M 340,0 L 200,0 C 245,25 280,60 310,120 C 328,70 340,35 340,0 Z" fill={colors.amberLight} />
                 <path d="M 328,12 L 60,12 C 120,45 185,105 235,210 L 328,90 Z" fill="none" stroke={colors.goldMain} strokeWidth="2" />
                 <path d="M 328,12 L 328,280" fill="none" stroke={colors.goldMain} strokeWidth="2" />
             </svg>
 
             {/* Bottom Left Corner */}
             <svg width="240" height="240" style={{ position: "absolute", bottom: 0, left: 0, zIndex: 5 }}>
-                <path d="M 0,228 L 180,228 C 130,200 90,150 0,100 Z" fill={colors.purpleMedium} />
-                <path d="M 0,228 L 130,228 C 90,200 60,150 0,120 Z" fill={colors.purpleDark} />
+                <path d="M 0,228 L 180,228 C 130,200 90,150 0,100 Z" fill={colors.amberMedium} />
+                <path d="M 0,228 L 130,228 C 90,200 60,150 0,120 Z" fill={colors.amberDark} />
                 <path d="M 12,228 L 210,228 C 155,195 115,135 12,60 Z" fill="none" stroke={colors.goldMain} strokeWidth="2" />
                 <path d="M 12,228 L 12,0" fill="none" stroke={colors.goldMain} strokeWidth="2" />
                 {/* Ornamental flourish near corner */}
@@ -90,8 +93,8 @@ rgba(0,0,0,0.01) 3px
 
             {/* Bottom Right Corner */}
             <svg width="240" height="240" style={{ position: "absolute", bottom: 0, right: 0, zIndex: 5 }}>
-                <path d="M 240,228 L 60,228 C 110,200 150,150 240,100 Z" fill={colors.purpleMedium} />
-                <path d="M 240,228 L 110,228 C 150,200 180,150 240,120 Z" fill={colors.purpleDark} />
+                <path d="M 240,228 L 60,228 C 110,200 150,150 240,100 Z" fill={colors.amberMedium} />
+                <path d="M 240,228 L 110,228 C 150,200 180,150 240,120 Z" fill={colors.amberDark} />
                 <path d="M 228,228 L 30,228 C 85,195 125,135 228,60 Z" fill="none" stroke={colors.goldMain} strokeWidth="2" />
                 <path d="M 228,228 L 228,0" fill="none" stroke={colors.goldMain} strokeWidth="2" />
                 <path d="M 228,228 Q 195,195 215,175" fill="none" stroke={colors.goldLight} strokeWidth="1.5" />
@@ -140,7 +143,7 @@ rgba(0,0,0,0.01) 3px
                         </g>
                         {/* Central Crest Shield */}
                         <g transform="translate(36, 12)">
-                            <polygon points="0,0 28,0 28,24 14,38 0,24" fill={colors.purpleMedium} stroke={colors.goldLight} strokeWidth="1.5" />
+                            <polygon points="0,0 28,0 28,24 14,38 0,24" fill={colors.amberMedium} stroke={colors.goldLight} strokeWidth="1.5" />
                             <circle cx="14" cy="16" r="9" fill="none" stroke="white" strokeWidth="1" strokeDasharray="2,2" />
                             <polyline points="9,16 13,20 20,11" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </g>
@@ -182,7 +185,7 @@ rgba(0,0,0,0.01) 3px
                     color: colors.textNavy, 
                     letterSpacing: "5px",
                     fontFamily: "'Times New Roman', Times, serif",
-                    textShadow: "0 2px 10px rgba(212,175,55,0.10)",
+                    textShadow: "0 2px 10px rgba(212,175,55,0.12), 0 0 34px rgba(197,157,63,0.08)",
                 }}>
                     CERTIFICATE
                 </div>
@@ -232,9 +235,9 @@ rgba(0,0,0,0.01) 3px
 
                 {/* Score Segment flanked by Gold Stars */}
                 <div style={{ marginTop: "12px", fontSize: "58px", color: colors.textPurple, fontWeight: "800", display: "flex", alignItems: "center", gap: "16px" }}>
-                    <span style={{ color: colors.goldMain, fontSize: "20px" }}>★</span>
+                    <Trophy style={{ width: "18px", height: "18px", color: colors.goldMain }} />
                     <span style={{ letterSpacing: "-1px" }}>{result.percentage}%</span>
-                    <span style={{ color: colors.goldMain, fontSize: "20px" }}>★</span>
+                    <Trophy style={{ width: "18px", height: "18px", color: colors.goldMain }} />
                 </div>
 
                 {/* Delicate Bottom Scroll Flourish */}
@@ -252,19 +255,19 @@ rgba(0,0,0,0.01) 3px
             {/* Issued Date Signature Line Block */}
             <div style={{ position: "absolute", bottom: "55px", left: "55px", zIndex: 10 }}>
                 <div style={{ fontSize: "13px", color: colors.textMuted, fontFamily: "sans-serif" }}>
-                    Issued on:{" "}<span style={{ fontWeight: "700", color: colors.textNavy }}> {new Date().toLocaleDateString()}</span>
+                    Issued on:{" "}<span style={{ fontWeight: "700", color: colors.textNavy }}>{new Date().toLocaleDateString("en-GB")}</span>
                 </div>
                 <div style={{ width: "165px", height: "1px", backgroundColor: colors.goldMain, marginTop: "6px" }} />
             </div>
 
              {/* Left Side: Certified Rosette Seal */}
             <div style={{position: "absolute",
-top: "65px",
-right: "70px",
-width: "120px",
-height: "120px",
-zIndex: 10,
-transform: "scale(0.82)" }}>
+            top: "65px",
+            right: "70px",
+            width: "120px",
+            height: "120px",
+            zIndex: 10,
+            transform: "scale(0.82)" }}>
                 
 
                 {/* Multi-pointed Rosette Badge Geometry */}
@@ -285,7 +288,7 @@ transform: "scale(0.82)" }}>
                     <div style={{
                         position: "absolute", 
                         inset: "16px", 
-                        backgroundColor: colors.purpleDark, 
+                        backgroundColor: colors.amberDark, 
                         borderRadius: "50%",
                         display: "flex", 
                         flexDirection: "column", 
@@ -297,22 +300,19 @@ transform: "scale(0.82)" }}>
                         <div style={{ fontSize: "7px", fontWeight: "700", color: colors.goldLight, letterSpacing: "1px" }}>ACHIEVEMENT</div>
                         
                         {/* Inner Checkmark Icon Assembly */}
-                        <svg width="24" height="24" viewBox="0 0 24 24" style={{ margin: "1px 0" }}>
-                            <circle cx="12" cy="12" r="10" fill="none" stroke={colors.goldLight} strokeWidth="1.5" />
-                            <polyline points="8,12 11,15 17,9" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
+                        <ShieldCheck style={{ width: "22px", height: "22px", color: colors.goldLight }} />
 
                         <div style={{ fontSize: "7px", fontWeight: "700", color: colors.goldLight, letterSpacing: "1px" }}>CERTIFIED</div>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side: Authority Signature Block */}
-            <div style={{ position: "absolute",
-bottom: "42px",
-right: "70px",
-textAlign: "center",
-zIndex: 10}}>
+                {/* Right Side: Authority Signature Block */}
+                <div style={{ position: "absolute",
+                bottom: "42px",
+                right: "70px",
+                textAlign: "center",
+                zIndex: 10}}>
                 <div style={{ 
                     fontFamily: "'Great Vibes', 'Brush Script MT', cursive", 
                     fontSize: "34px", 
@@ -332,7 +332,7 @@ zIndex: 10}}>
                 bottom: "12px", 
                 left: "50%",
                 transform: "translateX(-50%)",
-                backgroundColor: colors.purpleDark,
+                backgroundColor: colors.amberDark,
                 padding: "9px 38px",
                 borderRadius: "4px 4px 0 0",
                 display: "flex",
@@ -343,11 +343,11 @@ zIndex: 10}}>
                 boxShadow: "0 6px 18px rgba(35,17,69,0.35)",
                 zIndex: 10
             }}>
-                <span style={{ color: colors.goldLight, fontSize: "11px" }}>★</span>
+               <Trophy style={{ width: "24px", height: "24px", color: colors.goldMain, filter: "drop-shadow(0 0 8px rgba(197,157,63,0.35))" }} />
                 <span style={{ color: "white", fontSize: "10px", letterSpacing: "1.5px", fontWeight: "700", fontFamily: "sans-serif" }}>
                     AI POWERED EXAMINATION PLATFORM
                 </span>
-                <span style={{ color: colors.goldLight, fontSize: "11px" }}>★</span>
+                <Trophy style={{ width: "24px", height: "24px", color: colors.goldMain, filter: "drop-shadow(0 0 8px rgba(197,157,63,0.35))" }} />
             </div>
 
         </div>

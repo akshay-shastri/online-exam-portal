@@ -20,6 +20,11 @@ import VerifyOtp from "./pages/VerifyOtp";
 import ReviewAnswersPage from "./pages/ReviewAnswersPage";
 import LiveMonitoringPage from "./pages/LiveMonitoringPage";
 import PageTransition from "./components/PageTransition";
+import SystemCheckPage from "./pages/SystemCheckPage";
+import "./styles/button.css";
+import "./styles/navbar.css";
+import "./styles/cards.css";
+import ExamCandidates from "./pages/ExamCandidates";
 
 
 function App() {
@@ -38,15 +43,15 @@ function App() {
 
         duration: 3200,
 
-        style: {
+            style: {
 
             background:
-                "linear-gradient(135deg,rgba(17,24,39,0.96),rgba(88,28,135,0.92))",
+                "linear-gradient(135deg,rgba(17,24,39,0.96),rgba(15,23,42,0.92))",
 
-            color: "#f5f3ff",
+            color: "#ffffff",
 
             border:
-                "1px solid rgba(168,85,247,0.28)",
+                "1px solid rgba(250,204,21,0.18)",
 
             borderRadius: "18px",
 
@@ -57,7 +62,7 @@ function App() {
             WebkitBackdropFilter: "blur(18px)",
 
             boxShadow:
-                "0 0 30px rgba(124,58,237,0.22),0 18px 50px rgba(0,0,0,0.45)",
+                "0 0 30px rgba(250,204,21,0.12),0 18px 50px rgba(0,0,0,0.45)",
 
             fontSize: "14px",
 
@@ -235,6 +240,19 @@ function App() {
     />
 
     <Route
+    path="/system-check/:examId"
+    element={
+        <ProtectedRoute allowedRole="STUDENT">
+
+            <PageTransition>
+                <SystemCheckPage />
+            </PageTransition>
+
+        </ProtectedRoute>
+    }
+    />
+
+    <Route
         path="/exam/:examId"
         element={
             <ProtectedRoute allowedRole="STUDENT">
@@ -302,6 +320,11 @@ function App() {
                 <LiveMonitoringPage />
             </PageTransition>
         }
+    />
+
+    <Route
+    path="/admin/exam/:id/candidates"
+    element={<ExamCandidates />}
     />
 
 </Routes>

@@ -16,9 +16,41 @@ public class ExamController {
     private ExamService examService;
 
     @PostMapping
-    public Exam createExam(@RequestBody Exam exam) {
-        return examService.createExam(exam);
+    public Exam createExam(
+            @RequestBody Exam exam
+    ) {
+
+    if (
+        exam.getExamType()
+            .equals("PRACTICE")
+    ) {
+
+        exam.setMaxAttempts(-1);
+
+        exam.setReviewEnabled(
+            true
+        );
+
+        exam.setProctoringEnabled(
+            false
+        );
+
+    } else {
+
+        exam.setMaxAttempts(1);
+
+        exam.setReviewEnabled(
+            false
+        );
+
+        exam.setProctoringEnabled(
+            true
+        );
     }
+
+    return examService
+            .createExam(exam);
+}
 
     @GetMapping
     public List<Exam> getAllExams() {

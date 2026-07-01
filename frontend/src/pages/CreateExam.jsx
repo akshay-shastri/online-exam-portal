@@ -4,26 +4,30 @@ import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
 import PremiumLoader from "../components/PremiumLoader";
+import {FileText,FilePlus2,Plus,Minus,Clock3,CalendarClock,CircleHelp, LogOut,PlusCircle,FilePenLine, PlayCircle, StopCircle } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 function CreateExam() {
     const navigate = useNavigate();
     const name = localStorage.getItem("name");
     const firstLetter = name ? name.charAt(0).toUpperCase() : "A";
-
     const [title, setTitle] = useState("");
     const [duration, setDuration] = useState("");
+    const [examType, setExamType] = useState("MAIN");
+    const [registrationStart, setRegistrationStart] = useState(null);
+    const [registrationEnd, setRegistrationEnd] = useState(null);
     const [positiveMarks, setPositiveMarks] = useState("");
     const [negativeMarks, setNegativeMarks] = useState("");
-    const [startTime, setStartTime] = useState("");
-    const [endTime, setEndTime] = useState("");
+    const [startTime, setStartTime] = useState(null);
+    const [endTime, setEndTime] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
 
-    const inputClass = "w-full bg-black/40 border border-purple-500/25 text-purple-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400/50 placeholder-purple-400/40 transition-all duration-200 hover:border-purple-400/40 backdrop-blur-sm";
-
-    const dateTimeInputClass = "w-full bg-black/50 border border-purple-500/30 text-purple-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:border-purple-300/60 transition-all duration-300 hover:border-purple-400/50 backdrop-blur-sm cursor-pointer";
-
-    const labelClass = "block text-xs font-semibold text-purple-300/70 uppercase tracking-wider mb-2";
+    const inputClass = "w-full bg-black/40 border border-amber-500/25 text-amber-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-400/50 placeholder-amber-400/40 transition-all duration-200 hover:border-amber-400/40 backdrop-blur-sm";
+    const dateTimeInputClass = "w-full bg-black/50 border border-amber-500/30 text-amber-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-300/60 transition-all duration-300 hover:border-amber-400/50 backdrop-blur-sm cursor-pointer";
+    const labelClass = "block text-xs font-semibold text-amber-300/70 uppercase tracking-wider mb-2";
 
     const formatDateTimeForDisplay = (value) => {
         if (!value) return "";
@@ -36,6 +40,59 @@ function CreateExam() {
             minute: "2-digit",
             hour12: true
         });
+    };
+
+   const formatDateTimeForBackend = (date) => {
+
+    if (!date) return null;
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(date.getMonth() + 1)
+            .padStart(2, "0");
+
+    const day =
+        String(date.getDate())
+            .padStart(2, "0");
+
+    const hours =
+        String(date.getHours())
+            .padStart(2, "0");
+
+    const minutes =
+        String(date.getMinutes())
+            .padStart(2, "0");
+
+    const seconds =
+        String(date.getSeconds())
+            .padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
+    const getExamConfig = () => {
+        switch (examType) {
+            case "PRACTICE":
+                return {
+                    maxAttempts: -1,
+                    reviewEnabled: true,
+                    proctoringEnabled: false
+                };
+            case "MOCK":
+                return {
+                    maxAttempts: 1,
+                    reviewEnabled: true,
+                    proctoringEnabled: true
+                };
+            default:
+                return {
+                    maxAttempts: 1,
+                    reviewEnabled: false,
+                    proctoringEnabled: true
+                };
+        }
     };
 
     const createExam = async () => {
@@ -54,28 +111,39 @@ function CreateExam() {
         setLoading(true);
 
         try {
-            const response = await API.post("/exams", {
-                title,
-                duration: parseInt(duration),
-                positiveMarks: positiveMarks ? parseFloat(positiveMarks) : 1,
-                negativeMarks: negativeMarks ? parseFloat(negativeMarks) : 0,
-                startTime: startTime ? `${startTime}:00` : null,
-                endTime: endTime ? `${endTime}:00` : null,
-                active: true
-            });
+            const config = getExamConfig();
+            const payload = {
+            title,
+            duration: parseInt(duration),
+            positiveMarks: positiveMarks ? parseFloat(positiveMarks) : 1,
+            negativeMarks: negativeMarks ? parseFloat(negativeMarks) : 0,
+            startTime: formatDateTimeForBackend(startTime),
+            endTime: formatDateTimeForBackend(endTime),
+            active: true,
+            examType,
+            registrationStart: formatDateTimeForBackend(registrationStart),
+            registrationEnd: formatDateTimeForBackend(registrationEnd),
+            maxAttempts: config.maxAttempts,
+            reviewEnabled: config.reviewEnabled,
+            proctoringEnabled: config.proctoringEnabled,
+        };
 
-            toast.success("Exam created successfully!");
-            console.log(response.data);
+        console.log(payload);
 
-            // Navigate back to admin dashboard
-            setTimeout(() => navigate("/admin-dashboard"), 500);
+        const response = await API.post("/exams", payload);
+
+        toast.success("Exam created successfully!");
+        console.log(response.data);
+
+        // Navigate back to admin dashboard
+        setTimeout(() => navigate("/admin-dashboard"), 500);
         } catch (error) {
-            console.error(error);
+            console.error(error.response?.data || error);
             toast.error("Failed to create exam. Please try again.");
         } finally {
             setLoading(false);
         }
-    };
+        };
 
     const logout = () => {
         setShowDropdown(false);
@@ -87,18 +155,14 @@ function CreateExam() {
     return (
         <div className="premium-root min-h-screen" onClick={() => showDropdown && setShowDropdown(false)}>
             {loading && (
-
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm">
-
-        <PremiumLoader
-            title="Creating Examination..."
-            subtitle="Configuring exam structure, rules, and assessment settings."
-            height="100vh"
-        />
-
-    </div>
-
-)}
+                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm">
+                    <PremiumLoader
+                        title="Creating Examination..."
+                        subtitle="Configuring exam structure, rules, and assessment settings."
+                        height="100vh"
+                    />
+                </div>
+            )}
             <div className="ambient-blob blob-a" />
             <div className="ambient-blob blob-b" />
 
@@ -138,7 +202,7 @@ function CreateExam() {
                             <div className="dropdown-menu">
                                 <div className="dropdown-divider" />
                                 <div className="dropdown-item dropdown-item-danger" onClick={logout}>
-                                    <div className="dropdown-item-icon">🚪</div>
+                                    <div className="dropdown-item-icon"> <LogOut className="w-4 h-4" /></div>
                                     <span>Logout</span>
                                 </div>
                             </div>
@@ -147,65 +211,39 @@ function CreateExam() {
                 </div>
             </nav>
 
-            <div className="px-6 md:px-12 py-10 max-w-2xl mx-auto">
+            <div className="px-6 md:px-12 py-10 max-w-4xl mx-auto">
                 {/* Hero Section */}
-                <div className="mb-12 glass-hero">
-                    <div className="relative z-10">
-                        <span className="hero-accent">Create Exam</span>
-                        <h2 className="hero-title">Add New Examination</h2>
-                        <p className="hero-sub">Configure exam details, marking scheme, and time constraints for your assessment.</p>
+                    <div className="mb-14 premium-hero-card premium-hover-lift">
+                        <div className="relative z-10 max-w-4xl flex flex-col items-start">
+                            <span className="premium-badge mb-5">Create Exam</span>
+                            <h2 className="premium-title text-5xl sm:text-6xl leading-[1.05] tracking-tight max-w-4xl flex items-center gap-4">Add New Examination<span className="inline-flex items-center justify-center text-amber-300"><FilePlus2 className="w-10 h-10" /></span></h2>
+                            <p className="premium-subtitle mt-6 text-lg leading-8 max-w-3xl">Configure exam details, marking scheme, and time constraints for your assessment.</p>
+                        </div>
                     </div>
-                </div>
 
                 {/* Create Exam Card */}
-                <div 
-                    className="rounded-2xl overflow-hidden backdrop-blur-xl transition-all duration-300"
-                    style={{
-                        background: 'linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.012) 100%)',
-                        border: '1px solid rgba(168,85,247,0.2)',
-                        boxShadow: '0 0 40px rgba(168,85,247,0.1), 0 4px 24px rgba(0,0,0,0.35)'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = '0 0 60px rgba(168,85,247,0.15), 0 12px 48px rgba(0,0,0,0.4)';
-                        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = '0 0 40px rgba(168,85,247,0.1), 0 4px 24px rgba(0,0,0,0.35)';
-                        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
-                    }}
-                >
+                <div className="premium-create-exam-card premium-shine">
                     {/* Accent Strip */}
-                    <div className="h-1.5 w-full bg-gradient-to-r from-purple-500/60 via-pink-500/40 to-purple-600/50" />
+                    <div className="h-1.5 w-full bg-gradient-to-r from-amber-500/60 via-yellow-500/40 to-amber-600/50" />
 
-                    <div className="p-8">
+                    <div className="p-8 md:p-10 space-y-8">
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-8">
-                            <div 
-                                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{
-                                    background: 'rgba(168,85,247,0.15)',
-                                    border: '1px solid rgba(168,85,247,0.3)',
-                                    boxShadow: '0 0 12px rgba(168,85,247,0.2)'
-                                }}
-                            >
-                                <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                            </div>
+                            <div className="premium-create-icon"> <PlusCircle className="w-5 h-5 text-amber-300" /></div>
                             <div>
-                                <h2 style={{ color: '#f3e8ff' }} className="text-lg font-bold leading-tight">Exam Configuration</h2>
-                                <p style={{ color: 'rgba(196,181,253,0.5)' }} className="text-xs mt-1">Set up your examination parameters</p>
+                                <h2 className="premium-section-title">Exam Configuration</h2>
+                                <p className="premium-muted-text">Set up your examination parameters</p>
                             </div>
                         </div>
 
                         <div className="space-y-5">
                             {/* Exam Title */}
                             <div>
-                                <label className={labelClass}>📝 Exam Title</label>
+                                <label className={`${labelClass} flex items-center gap-2`}> <FilePenLine className="w-4 h-4 text-amber-300" /> Exam Title </label>
                                 <input
                                     type="text"
                                     placeholder="e.g. Mathematics Final Exam"
-                                    className={inputClass}
+                                    className={`${inputClass} premium-input`}
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                 />
@@ -214,36 +252,82 @@ function CreateExam() {
                             {/* Marks Section */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className={labelClass}>➕ Positive Marks</label>
+                                    <label className={`${labelClass} flex items-center gap-2`}> <Plus className="w-4 h-4 text-emerald-400" /> Positive Marks </label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         placeholder="e.g. 1"
-                                        className={inputClass}
+                                        className={`${inputClass} premium-input`}
                                         value={positiveMarks}
                                         onChange={(e) => setPositiveMarks(e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <label className={labelClass}>➖ Negative Marks</label>
+                                    <label className={`${labelClass} flex items-center gap-2`}> <Minus className="w-4 h-4 text-red-400" />Negative Marks</label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         placeholder="e.g. 0.25"
-                                        className={inputClass}
+                                        className={`${inputClass} premium-input`}
                                         value={negativeMarks}
                                         onChange={(e) => setNegativeMarks(e.target.value)}
                                     />
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <label className={labelClass}>Exam Type</label>
+                                <select
+                                    value={examType}
+                                    onChange={(e) => setExamType(e.target.value)}
+                                    className={`${inputClass} premium-input`}
+                                >
+                                    <option value="PRACTICE">Practice Exam</option>
+                                    <option value="MOCK">Mock Exam</option>
+                                    <option value="MAIN">Main Exam</option>
+                                </select>
+                            </div>
+
+                            {examType !== "PRACTICE" && (
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClass}>Registration Start</label>
+                                        <DatePicker
+                                            selected={registrationStart}
+                                            onChange={(date) => setRegistrationStart(date)}
+                                            showTimeSelect
+                                            timeIntervals={5}
+                                            dateFormat="dd MMM yyyy, hh:mm aa"
+                                            placeholderText="Select registration start"
+                                            className={`${dateTimeInputClass} premium-input`}
+                                            popperClassName="premium-datepicker-popper"
+                                            calendarClassName="premium-datepicker"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Registration End</label>
+                                        <DatePicker
+                                            selected={registrationEnd}
+                                            onChange={(date) => setRegistrationEnd(date)}
+                                            showTimeSelect
+                                            timeIntervals={5}
+                                            dateFormat="dd MMM yyyy, hh:mm aa"
+                                            placeholderText="Select registration end"
+                                            className={`${dateTimeInputClass} premium-input`}
+                                            popperClassName="premium-datepicker-popper"
+                                            calendarClassName="premium-datepicker"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Duration */}
                             <div>
-                                <label className={labelClass}>⏱️ Duration (minutes)</label>
+                                <label className={`${labelClass} flex items-center gap-2`}> <Clock3 className="w-4 h-4 text-amber-300" />Duration (minutes)</label>
                                 <input
                                     type="number"
                                     placeholder="Duration in minutes"
-                                    className={inputClass}
+                                    className={`${inputClass} premium-input`}
                                     value={duration}
                                     onChange={(e) => setDuration(e.target.value)}
                                 />
@@ -252,13 +336,17 @@ function CreateExam() {
                             {/* Time Section */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className={labelClass}>🟢 Start Time (Optional)</label>
-                                    <input
-                                        type="datetime-local"
-                                        className={dateTimeInputClass}
-                                        value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
-                                        title="Select exam start date and time"
+                                    <label className={`${labelClass} flex items-center gap-2`}> <PlayCircle className="w-4 h-4 text-emerald-400" /> Start Time (Optional) </label>
+                                    <DatePicker
+                                        selected={startTime}
+                                        onChange={(date) => setStartTime(date)}
+                                        showTimeSelect
+                                        timeIntervals={5}
+                                        dateFormat="dd MMM yyyy, hh:mm aa"
+                                        placeholderText="Select exam start"
+                                        className={`${dateTimeInputClass} premium-input`}
+                                        popperClassName="premium-datepicker-popper"
+                                        calendarClassName="premium-datepicker"
                                     />
                                     {startTime && (
                                         <p style={{ color: 'rgba(74,222,128,0.6)' }} className="text-xs mt-2 flex items-center gap-1.5">
@@ -269,13 +357,17 @@ function CreateExam() {
                                 </div>
 
                                 <div>
-                                    <label className={labelClass}>🔴 End Time (Optional)</label>
-                                    <input
-                                        type="datetime-local"
-                                        className={dateTimeInputClass}
-                                        value={endTime}
-                                        onChange={(e) => setEndTime(e.target.value)}
-                                        title="Select exam end date and time"
+                                    <label className={`${labelClass} flex items-center gap-2`}> <StopCircle className="w-4 h-4 text-red-400" /> End Time (Optional) </label>
+                                    <DatePicker
+                                        selected={endTime}
+                                        onChange={(date) => setEndTime(date)}
+                                        showTimeSelect
+                                        timeIntervals={5}
+                                        dateFormat="dd MMM yyyy, hh:mm aa"
+                                        placeholderText="Select exam end"
+                                        className={`${dateTimeInputClass} premium-input`}
+                                        popperClassName="premium-datepicker-popper"
+                                        calendarClassName="premium-datepicker"
                                     />
                                     {endTime && (
                                         <p style={{ color: 'rgba(248,113,113,0.6)' }} className="text-xs mt-2 flex items-center gap-1.5">
@@ -290,49 +382,14 @@ function CreateExam() {
                             <div className="flex gap-3 pt-6">
                                 <button
                                     onClick={() => navigate("/admin-dashboard")}
-                                    className="flex-1 rounded-xl text-sm font-semibold transition-all duration-200 py-3 border"
-                                    style={{
-                                        background: 'rgba(124,58,237,0.05)',
-                                        border: '1px solid rgba(168,85,247,0.15)',
-                                        color: 'rgba(196,181,253,0.8)'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = 'rgba(124,58,237,0.12)';
-                                        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
-                                        e.currentTarget.style.color = '#d8b4fe';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = 'rgba(124,58,237,0.05)';
-                                        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.15)';
-                                        e.currentTarget.style.color = 'rgba(196,181,253,0.8)';
-                                    }}
+                                    className="premium-btn-secondary flex-1"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={createExam}
                                     disabled={loading}
-                                    className="flex-1 rounded-xl text-sm font-semibold transition-all duration-200 py-3 border flex items-center justify-center gap-2"
-                                    style={{
-                                        background: loading ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg, rgba(168,85,247,0.8), rgba(217,70,239,0.6))',
-                                        border: '1px solid rgba(168,85,247,0.4)',
-                                        color: '#f3e8ff',
-                                        boxShadow: loading ? 'none' : '0 0 20px rgba(168,85,247,0.3)',
-                                        opacity: loading ? 0.7 : 1,
-                                        cursor: loading ? 'not-allowed' : 'pointer'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        if (!loading) {
-                                            e.currentTarget.style.boxShadow = '0 0 30px rgba(168,85,247,0.5), 0 8px 16px rgba(0,0,0,0.4)';
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (!loading) {
-                                            e.currentTarget.style.boxShadow = '0 0 20px rgba(168,85,247,0.3)';
-                                            e.currentTarget.style.transform = 'translateY(0px)';
-                                        }
-                                    }}
+                                    className="premium-button premium-shine flex-1 flex items-center justify-center gap-2"
                                 >
                                     {loading ? (
                                         <>
@@ -344,9 +401,7 @@ function CreateExam() {
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                            </svg>
+                                           <Plus className="w-4 h-4" />
                                             Create Exam
                                         </>
                                     )}
@@ -357,44 +412,56 @@ function CreateExam() {
                 </div>
 
                 {/* Help Section */}
-                <div 
-                    className="mt-10 rounded-2xl p-6 backdrop-blur-md transition-all duration-300"
-                    style={{
-                        background: 'rgba(124,58,237,0.06)',
-                        border: '1px solid rgba(168,85,247,0.12)',
-                        boxShadow: '0 0 20px rgba(124,58,237,0.08)'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = '0 0 30px rgba(124,58,237,0.12)';
-                        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = '0 0 20px rgba(124,58,237,0.08)';
-                        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)';
-                    }}
-                >
-                    <h3 style={{ color: '#f3e8ff' }} className="text-sm font-bold mb-4">📋 Configuration Guide</h3>
-                    <ul style={{ color: 'rgba(196,181,253,0.7)' }} className="space-y-3 text-xs leading-relaxed">
-                        <li className="flex gap-2">
-                            <span className="text-purple-400 flex-shrink-0">➕</span>
-                            <span><strong className="text-purple-300">Positive Marks:</strong> Points awarded for each correct answer (default: 1)</span>
+                <div className="premium-card mt-10 p-8 premium-shine">
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-300"> <FileText className="w-5 h-5" /></div>
+                        <h3 className="text-sm font-bold tracking-wide text-white">
+                            Configuration Guide</h3>
+                    </div>
+                    <ul className="space-y-4 text-sm leading-relaxed text-white/70">
+
+                        <li className="flex gap-3">
+                            <div className="text-emerald-400 flex-shrink-0 mt-0.5"> <Plus className="w-4 h-4" /></div>
+
+                            <span><strong className="text-amber-300"> Positive Marks: </strong> Points awarded for each correct answer (default: 1) </span>
                         </li>
-                        <li className="flex gap-2">
-                            <span className="text-purple-400 flex-shrink-0">➖</span>
-                            <span><strong className="text-purple-300">Negative Marks:</strong> Points deducted for each wrong answer (default: 0)</span>
+
+                        <li className="flex gap-3">
+                            <div className="text-red-400 flex-shrink-0 mt-0.5"><Minus className="w-4 h-4" /> </div>
+                             <span><strong className="text-amber-300">Negative Marks: </strong>{" "}Points deducted for each wrong answer (default: 0) </span>
                         </li>
-                        <li className="flex gap-2">
-                            <span className="text-purple-400 flex-shrink-0">⏱️</span>
-                            <span><strong className="text-purple-300">Duration:</strong> Exam time limit in minutes (required)</span>
+
+                        <li className="flex gap-3">
+                            <div className="text-sky-400 flex-shrink-0 mt-0.5"><Clock3 className="w-4 h-4" /> </div>
+                            <span><strong className="text-amber-300">Duration:</strong>{" "}Exam time limit in minutes (required) </span>
                         </li>
-                        <li className="flex gap-2">
-                            <span className="text-purple-400 flex-shrink-0">🕐</span>
-                            <span><strong className="text-purple-300">Start/End Time:</strong> Optional. Leave blank for no time restrictions.</span>
+
+                        <li className="flex gap-3">
+                            <div className="text-violet-400 flex-shrink-0 mt-0.5">
+                                <CalendarClock className="w-4 h-4" />
+                            </div>
+
+                            <span>
+                                <strong className="text-amber-300">
+                                    Start/End Time:
+                                </strong>{" "}
+                                Optional. Leave blank for no time restrictions.
+                            </span>
                         </li>
-                        <li className="flex gap-2">
-                            <span className="text-purple-400 flex-shrink-0">❓</span>
-                            <span><strong className="text-purple-300">Questions:</strong> After creating the exam, add questions from the dashboard.</span>
+
+                        <li className="flex gap-3">
+                            <div className="text-amber-300 flex-shrink-0 mt-0.5">
+                                <CircleHelp className="w-4 h-4" />
+                            </div>
+
+                            <span>
+                                <strong className="text-amber-300">
+                                    Questions:
+                                </strong>{" "}
+                                After creating the exam, add questions from the dashboard.
+                            </span>
                         </li>
+
                     </ul>
                 </div>
             </div>

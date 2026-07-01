@@ -1,3 +1,5 @@
+import { TriangleAlert } from "lucide-react";
+
 function ConfirmModal({ isOpen, title, message, confirmLabel = "Confirm", confirmClass = "premium-btn-primary", onConfirm, onCancel }) {
 
     if (!isOpen) return null;
@@ -29,16 +31,16 @@ function ConfirmModal({ isOpen, title, message, confirmLabel = "Confirm", confir
             <div
                 className="relative z-10 w-full max-w-md rounded-3xl overflow-hidden"
                 style={{
-                    background: 'linear-gradient(160deg,rgba(109,40,217,0.14) 0%,rgba(12,10,30,0.92) 100%)',
-                    border: '1px solid rgba(168,85,247,0.32)',
-                    boxShadow: '0 0 60px rgba(109,40,217,0.22), 0 0 0 1px rgba(168,85,247,0.08), 0 32px 64px rgba(0,0,0,0.6)',
+                    background: 'linear-gradient(160deg,rgba(250,204,21,0.10) 0%,rgba(12,10,30,0.94) 100%)',
+                    border: '1px solid rgba(250,204,21,0.18)',
+                    boxShadow: '0 0 60px rgba(250,204,21,0.12), 0 0 0 1px rgba(250,204,21,0.06), 0 32px 64px rgba(0,0,0,0.6)',
                     backdropFilter: 'blur(28px)',
                     WebkitBackdropFilter: 'blur(28px)',
                     animation: 'confirmModalSlideUp 0.22s cubic-bezier(0.34,1.56,0.64,1)',
                 }}
             >
                 {/* Top accent bar */}
-                <div style={{ height: '3px', background: 'linear-gradient(90deg,#7c3aed,#a855f7,#06b6d4)' }} />
+                <div style={{ height: '3px', background: 'linear-gradient(90deg,#facc15,#eab308,#ca8a04)' }} />
 
                 <div className="px-8 pt-8 pb-8">
 
@@ -47,35 +49,31 @@ function ConfirmModal({ isOpen, title, message, confirmLabel = "Confirm", confir
                         <div
                             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
                             style={{
-                                background: 'linear-gradient(135deg,rgba(124,58,237,0.3),rgba(168,85,247,0.18))',
-                                border: '1px solid rgba(168,85,247,0.35)',
-                                boxShadow: '0 0 28px rgba(124,58,237,0.3)',
+                                background: 'linear-gradient(135deg,rgba(250,204,21,0.24),rgba(234,179,8,0.16))',
+                                border: '1px solid rgba(250,204,21,0.24)',
+                                boxShadow: '0 0 28px rgba(250,204,21,0.18)',
                             }}
                         >
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                <line x1="12" y1="9" x2="12" y2="13" />
-                                <line x1="12" y1="17" x2="12.01" y2="17" />
-                            </svg>
+                            <TriangleAlert className="w-7 h-7 text-amber-200" />
                         </div>
                         <h2
                             className="text-2xl font-black mb-2"
                             style={{
-                                background: 'linear-gradient(90deg,#f3e8ff,#c4b5fd)',
+                                background: 'linear-gradient(90deg,#fff7cc,#fde68a)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
-                                filter: 'drop-shadow(0 0 10px rgba(168,85,247,0.35))',
+                                filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.24))',
                             }}
                         >
                             {title}
                         </h2>
-                        <p style={{ color: 'rgba(196,181,253,0.6)', fontSize: '14px', lineHeight: '1.6', maxWidth: '300px' }}>
+                        <p style={{ color: 'rgba(255,255,255,0.68)', fontSize: '14px', lineHeight: '1.6', maxWidth: '300px' }}>
                             {message}
                         </p>
                     </div>
 
                     {/* Divider */}
-                    <div style={{ height: '1px', background: 'rgba(168,85,247,0.12)', marginBottom: '24px' }} />
+                    <div style={{ height: '1px', background: 'rgba(250,204,21,0.12)', marginBottom: '24px' }} />
 
                     {/* Buttons */}
                     <div className="flex gap-3">
@@ -83,20 +81,20 @@ function ConfirmModal({ isOpen, title, message, confirmLabel = "Confirm", confir
                             onClick={onCancel}
                             className="flex-1 py-3.5 rounded-2xl font-semibold text-sm transition-all duration-200"
                             style={{
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'rgba(196,181,253,0.7)',
+                                background: 'rgba(255,255,255,0.04)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                color: 'rgba(255,255,255,0.74)',
                             }}
                             onMouseEnter={e => {
-                                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                                e.currentTarget.style.border = '1px solid rgba(168,85,247,0.3)';
-                                e.currentTarget.style.color = '#e9d5ff';
-                                e.currentTarget.style.boxShadow = '0 0 16px rgba(124,58,237,0.15)';
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                                e.currentTarget.style.border = '1px solid rgba(250,204,21,0.18)';
+                                e.currentTarget.style.color = '#ffffff';
+                                e.currentTarget.style.boxShadow = '0 0 16px rgba(250,204,21,0.08)';
                             }}
                             onMouseLeave={e => {
-                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)';
-                                e.currentTarget.style.color = 'rgba(196,181,253,0.7)';
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                                e.currentTarget.style.border = '1px solid rgba(255,255,255,0.08)';
+                                e.currentTarget.style.color = 'rgba(255,255,255,0.74)';
                                 e.currentTarget.style.boxShadow = 'none';
                             }}
                         >
@@ -106,18 +104,18 @@ function ConfirmModal({ isOpen, title, message, confirmLabel = "Confirm", confir
                             onClick={onConfirm}
                             className={`flex-1 py-3.5 rounded-2xl font-black text-sm transition-all duration-200 ${confirmClass}`}
                             style={{
-                                background: 'linear-gradient(135deg,#6d28d9,#7c3aed,#a855f7)',
-                                border: '1px solid rgba(216,180,254,0.35)',
+                                background: 'linear-gradient(135deg,#facc15,#eab308,#ca8a04)',
+                                border: '1px solid rgba(250,204,21,0.24)',
                                 color: '#fff',
-                                boxShadow: '0 0 24px rgba(124,58,237,0.45), 0 4px 16px rgba(0,0,0,0.4)',
+                                boxShadow: '0 0 24px rgba(250,204,21,0.18), 0 4px 16px rgba(0,0,0,0.4)',
                                 letterSpacing: '0.3px',
                             }}
                             onMouseEnter={e => {
-                                e.currentTarget.style.boxShadow = '0 0 40px rgba(168,85,247,0.6), 0 8px 24px rgba(0,0,0,0.5)';
+                                e.currentTarget.style.boxShadow = '0 0 40px rgba(250,204,21,0.22), 0 8px 24px rgba(0,0,0,0.5)';
                                 e.currentTarget.style.transform = 'translateY(-2px)';
                             }}
                             onMouseLeave={e => {
-                                e.currentTarget.style.boxShadow = '0 0 24px rgba(124,58,237,0.45), 0 4px 16px rgba(0,0,0,0.4)';
+                                e.currentTarget.style.boxShadow = '0 0 24px rgba(250,204,21,0.18), 0 4px 16px rgba(0,0,0,0.4)';
                                 e.currentTarget.style.transform = 'translateY(0)';
                             }}
                         >

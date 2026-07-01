@@ -4,6 +4,7 @@ import API from "../services/api";
 import toast from "react-hot-toast";
 import "../styles/dashboard.css";
 import PremiumLoader from "../components/PremiumLoader";
+import { Mail,CheckCircle2,RefreshCw,Info } from "lucide-react";
 
 function VerifyOtp() {
 
@@ -88,7 +89,7 @@ function VerifyOtp() {
             <div className="vo-container">
 
                 {/* ── Card ── */}
-                <div className="vo-card">
+                <div className="vo-card auth-enter premium-shine">
 
                     {/* Top accent strip */}
                     <div className="vo-strip" />
@@ -99,16 +100,13 @@ function VerifyOtp() {
                         {/* Icon with timer ring */}
                         <div className="vo-icon-wrap">
                             <div className="vo-icon-box">
-                                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
+                               <Mail className="w-7 h-7" />
                             </div>
                             {/* Timer ring */}
                             <div className="vo-ring-wrap">
                                 <svg className="vo-ring-svg" viewBox="0 0 52 52">
                                     <circle cx="26" cy="26" r="20" fill="none"
-                                        stroke="rgba(124,58,237,0.15)" strokeWidth="3" />
+                                        stroke="rgba(255,216,107,0.12)" strokeWidth="3" />
                                     <circle cx="26" cy="26" r="20" fill="none"
                                         stroke="url(#voRingGrad)"
                                         strokeWidth="3"
@@ -119,8 +117,9 @@ function VerifyOtp() {
                                     />
                                     <defs>
                                         <linearGradient id="voRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#4f46e5" />
-                                            <stop offset="100%" stopColor="#a855f7" />
+                                            <stop offset="0%" stopColor="#fde68a" />
+                                            <stop offset="50%" stopColor="#facc15" />
+                                            <stop offset="100%" stopColor="#f59e0b" />
                                         </linearGradient>
                                     </defs>
                                 </svg>
@@ -139,7 +138,7 @@ function VerifyOtp() {
 
                         {/* OTP input */}
                         <div className="vo-field">
-                            <label className="vo-label">Enter OTP Code</label>
+                            <label className="vo-input premium-input">Enter OTP Code</label>
                             <input
                                 type="text"
                                 placeholder="• • • • • •"
@@ -155,7 +154,7 @@ function VerifyOtp() {
                         <button
                             onClick={handleVerifyOtp}
                             disabled={loading || otp.length < 6}
-                            className="premium-btn-primary vo-btn-verify"
+                            className="premium-button premium-shine vo-btn-verify"
                         >
                             {loading ? (
                                 <>
@@ -167,10 +166,7 @@ function VerifyOtp() {
                                 </>
                             ) : (
                                 <>
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <CheckCircle2 className="w-4 h-4" />
                                     Verify Email
                                 </>
                             )}
@@ -187,7 +183,7 @@ function VerifyOtp() {
                                 <button
                                     onClick={handleResendOtp}
                                     disabled={resending}
-                                    className="vo-resend-btn"
+                                    className="premium-btn-secondary vo-resend-btn"
                                 >
                                     {resending ? (
                                         <>
@@ -199,10 +195,7 @@ function VerifyOtp() {
                                         </>
                                     ) : (
                                         <>
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
+                                            <RefreshCw className="w-4 h-4" />
                                             Resend OTP
                                         </>
                                     )}
@@ -214,10 +207,7 @@ function VerifyOtp() {
 
                     {/* Help note */}
                     <div className="vo-help-note">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0, opacity: 0.7 }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <Info className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
                         <p className="vo-help-text">
                             <span className="vo-help-bold">Didn't receive it?</span>{" "}
                             Check your spam folder or wait before resending.
