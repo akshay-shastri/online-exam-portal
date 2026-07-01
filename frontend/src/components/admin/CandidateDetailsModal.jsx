@@ -1,5 +1,5 @@
 import React from "react";
-import "../../styles/candidateDetailsModal.css";
+import "../../styles/CandidateDetailsModal.css";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 function CandidateDetailsModal({ open, onClose, data }) {
